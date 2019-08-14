@@ -1,0 +1,2078 @@
+#!/usr/bin/Rscript
+# sink("IDaSRP_077.txt", type = c("output", "message"))
+#####---------------------------------------------------------------------------
+##### R code for Disertation 'Information Demand and Stock Return Predictability'
+##### University of Essex
+##### Written by: Jonathan Legrand
+##### Written to be ran on Univeristy ceres.essex.ac.uk
+##### This script version spans from 
+#####---------------------------------------------------------------------------
+print("R code Version 77 for Disertation 'Information Demand and Stock Return Predictability': University of Essex: Written by: Jonathan Legrand. Written to be ran on Univeristy ceres.essex.ac.uk")
+
+
+####---------------------------------------------------------------------------
+#### Code preperation (clear memory, prepare libraries)
+####---------------------------------------------------------------------------
+print("Code preperation (clear memory, prepare libraries)")
+
+# remove all objects in the memory
+rm(list = ls())
+
+
+# # Install pakages/libraries/dependancies needed
+# install.packages(c("readxl", "xts", "fpp", "astsa", "tidyverse", "dplyr", "rugarch", "Metrics", "e1071", "forecast", "R.utils", "aTSA", "R.utils", "EnvStats", "ggplot2", "plotly")
+
+
+
+# Import Libraries
+
+library(readxl)
+
+# The library 'astsa' is used for Econometric Modelling. See more at:
+#https://www.rdocumentation.org/packages/astsa/versions/1.6/
+library(astsa)
+
+# The library 'rugarch' is used for GARCH Modelling. See more at:
+# https://stats.stackexchange.com/questions/93815/fit-a-garch-1-1-model-with-covariates-in-r
+# https://cran.r-project.org/web/packages/rugarch/rugarch.pdf
+# https://rdrr.io/rforge/rugarch/man/ugarchspec-methods.html
+library(rugarch)
+
+library(tidyverse)
+
+library(dplyr)
+
+library(xts)
+
+# The library 'Metrics' allows for the calculation of RMSE
+library(Metrics)
+
+# The library 'e1071' allows for the calculation of skewness
+library(e1071)
+
+# The library 'aTSA' allows for the calculation of the ADF test
+library(aTSA)
+
+library(forecast)
+
+# R.utils is needed for timeout functions
+library(R.utils)
+
+# EnvStats is needed to plot pdf's
+library(EnvStats)
+
+# plotly will allow us to plot 3d graphs
+library(plotly)
+Sys.setenv("plotly_username"="johnukfr")
+# Sys.setenv("plotly_api_key"=)
+
+library(ggplot2)
+theme_set(theme_minimal())
+
+
+
+####---------------------------------------------------------------------------
+#### Set Datasets
+####---------------------------------------------------------------------------
+print('Set Datasets')
+
+
+
+
+###---------------------------------------------------------------------------
+### SPX (i.e.: the S&P 500)
+###---------------------------------------------------------------------------
+
+
+SPX_Dates_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
+                          sheet = "Without_FRED_or_O-M_Holidays",
+                          range = "A2:A3794",
+                          col_names = "SPX_Dates")
+SPX_Dates = as.Date(SPX_Dates_df$SPX_Dates,"%Y-%m-%d", tz="Europe/London")
+# Setup Dates for subsets:
+SPX_Dates_df_m1 = slice(SPX_Dates_df, 2:3793)
+SPX_Datesm1 = as.Date(SPX_Dates_df_m1$SPX_Dates,"%Y-%m-%d", tz="Europe/London")
+SPX_Dates_df_m2 = slice(SPX_Dates_df, 3:3793)
+SPX_Datesm2 = as.Date(SPX_Dates_df_m2$SPX_Dates,"%Y-%m-%d", tz="Europe/London")
+# For a list of available time zones see:
+# https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+# # One can see the list of dates with the comand
+# fix(SPX_Dates)
+
+
+DGS1MO_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
+                       sheet = "Without_FRED_or_O-M_Holidays",
+                       range = "B2:B3794",
+                       col_names = "DGS1MO")
+DGS1MO = as.matrix(DGS1MO_df)
+
+DTB3_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/3-Month_Treasury_Bill/Daily_3-Month_Treasury_Bill_FRED_id_TB3MS_2004.01.01_to_2019.03.13.xlsx",
+                     sheet = "Without_FRED_or_O-M_Holidays",
+                     range = "B2:B3794",
+                     col_names = "TB3MS")
+DTB3 = as.matrix(DTB3_df)
+
+DDGS10_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/10-Year_Treasury_Rate/10-Year_Treasury_Constant_Maturity_Rate_FRED_id_DGS10_2004.01.01_to_2019.03.13.xlsx",
+                       sheet = "Without_FRED_or_O-M_Holidays",
+                       range = "B2:B3794",
+                       col_names = "DGS10")
+DDGS10 = as.matrix(DDGS10_df)
+
+SPX_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+                    sheet = "SPX2004-2019.03.1WithoutFREDHol",
+                    range = 'T2:T3794',
+                    col_names = "SPX")
+SPX = as.matrix(SPX_df)
+
+
+SPX_RVar_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+                         sheet = "SPX2004-2019.03.1WithoutFREDHol",
+                         range = "I2:I3794",
+                         col_names = "SPX_RVar")
+# Note that the Ox-Man institute provides real VARIANCE as per
+# https://realized.oxford-man.ox.ac.uk/documentation/estimators
+SPX_RV_df = (SPX_RVar_df^0.5)
+SPX_RV = as.matrix(SPX_RV_df)
+colnames(SPX_RV) = c('SPX_RV')
+SPX_RV_zoo=zoo(SPX_RV, as.Date(SPX_Dates))
+
+
+
+##---------------------------------------------------------------------------
+## SVI1
+##---------------------------------------------------------------------------
+
+# The SVI Excel file tends to have empty values at its end.
+# The 'slice' function bellow will remove them.
+SPX_SVI_df = slice(read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_Only_Trading_Days.xlsx",
+                              sheet = "SVI_Without_O-M_Holidays",
+                              range = "B1:B3802",
+                              col_names = "SPX_SVI"),
+                   1:length(SPX_Dates))
+SPX_SVI = as.matrix(SPX_SVI_df) # Convert the data frame 'SPX_SVI_df' into a matrix
+
+
+##---------------------------------------------------------------------------
+## SVI2
+##---------------------------------------------------------------------------
+
+SPX_SVI2_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/2/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_all_days.xlsx",
+                         sheet = "Sheet1",
+                         range = "A2:B5552",
+                         col_names = c("SVI2_dates", "SPX_SVI2"))
+SPX_SVI2_zoo = zoo(SPX_SVI2_df[1:5551,2], as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
+SPX_SVI2 = as.matrix(SPX_SVI2_zoo)
+
+
+##---------------------------------------------------------------------------
+## SVI CVP
+##---------------------------------------------------------------------------
+
+SPX_SVICPV_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/CPV/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2018.02.06 _CPV_days.xlsx",
+                           sheet = "Sheet1",
+                           range = "A2:B4824",
+                           col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
+SPX_SVICPV_zoo = zoo(SPX_SVICPV_df[1:4824,2],
+                     as.Date(as.matrix(SPX_SVICPV_df[1:4824,1])))
+SPX_SVICPV = as.matrix(SPX_SVICPV_zoo)
+
+
+##---------------------------------------------------------------------------
+## SVI CVP US
+##---------------------------------------------------------------------------
+
+SPX_SVICPVUS_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/CPV_US/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2016.11.09_all_days.xlsx",
+                             sheet = "Sheet1",
+                             range = "A2:B4824",
+                             col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
+SPX_SVICPVUS_zoo = zoo(SPX_SVICPVUS_df[1:4823,2],
+                       as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
+SPX_SVICPVUS_matrix = as.matrix(SPX_SVICPVUS_zoo)
+
+
+
+#---------------------------------------------------------------------------
+# # SVI CPV MA
+#---------------------------------------------------------------------------
+
+# the dSVI data is quite noisy, so we use a Moving Average to smooth it out
+# SPX_MAdSVICPV_all_days_zoo=zoo(movavg(SPX_dSVICPV_all_days_zoo, M,type="s"),
+#                                         as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+# SPX_MAdSVICPV_all_days_zoo=zoo(SPX_dSVICPV_all_days_zoo, as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+# SPX_MAdSVICPV = na.omit(SPX_MAdSVICPV_all_days_zoo) - (SPX_R_zoo*0)
+
+
+
+# Deppending on the M chosen, the sample sie differs since we loose M starting
+# datapoints; so to insure we get comparable data throughout, we will only start
+# R and MAdSVI on 2004-01-07:
+# SPX_R_Sample_zoo = SPX_R_zoo[3:length(SPX_R_zoo)]
+# SPX_R_Sample_zoo = SPX_R_Sample_zoo - (SPX_MAdSVICPV*0)
+
+# SPX_MAdSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
+# SPX_dSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
+
+# SPX_Sample_Dates = as.Date(zoo::index(SPX_MAdSVICPV))
+# Note that when usinf MAdSVI, the sample would start M days after 2004-01-01;
+# the maximum we will allow M to be will be 6, such that it starts on
+# 2004-01-07 and ends on 2017-03-15.
+# Its last in-GARCH-training-sample value is 2004-12-31 and is its 245th value.
+# Its first out-of-GARCH-training-sample value is 2005-01-03 and is its 246th value.
+
+
+###---------------------------------------------------------------------------
+### FTSE
+###---------------------------------------------------------------------------
+print("Importing FTSE data")
+
+
+
+FTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+                    sheet = "FTSE2001-2019.06.21",
+                    range = 'U2:U4910',
+                    col_names = "FTSE")
+FTSE_matrix = as.matrix(FTSE_df)
+
+FTSE_Dates = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+                        sheet = "FTSE2001-2019.06.21",
+                        range = 'A2:A4910',
+                        col_names = "FTSE Dates")
+
+FTSE_Dates_matrix = as.matrix(FTSE_Dates)
+
+FTSE_zoo = as.zoo(FTSE_matrix, as.Date(FTSE_Dates_matrix))
+
+
+
+# # Band of England (BoE) r_f (risk free bond daily rate of return)
+# Zero coupon nominal curves as defined by the BoE: : The spot interest rate or zero coupon yield is the rate at which an individual cash flow on some future date is discounted to determine its present value. By definition it is the yield to maturity of a zero coupon bond and can be considered as an average of single period rates to that maturity. Conventional dated stocks with a significant amount in issue and having more than three months to maturity, plus General Collateral repo rates (at the short end) are used to estimate these yields; index-linked stocks, irredeemable stocks, double dated stocks, stocks with embedded options, variable and floating stocks are all excluded.
+# Data gathered from http://www.bankofengland.co.uk/boeapps/iadb/index.asp?Travel=NIxIRx&levels=1&XNotes=Y&C=2C6&C=RN&C=DR6&G0Xtop.x=57&G0Xtop.y=9&XNotes2=Y&Nodes=X4051X4052X4053X4054X4066X4067X4068X38263&SectionRequired=I&HideNums=-1&ExtraInfo=true#BM
+# https://www.bankofengland.co.uk/statistics/details/further-details-about-yields-data
+# Note that: The prices of conventional gilts are quoted in terms of £100 nominal. As per: https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/
+print("Importing BoE data")
+
+BoE5YR_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/BoE_5_Year_Gilt/British_ Government_Securities_Yield_5_year_Nominal_Zero_Coupon.xlsx",
+                     sheet = "British_ Government_Securities_",
+                     range = 'A5:B3937',
+                     col_names = c("BoE 5Y Yield Dates", "BoE 5Y Yield"))
+BoE5YR_matrix = as.matrix(BoE5YR_df)
+BoE5YR_zoo = zoo(BoE5YR_matrix[1:3933,2], as.Date(BoE5YR_matrix[1:3933,1]))
+
+
+
+SVIFTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/FTSE 100 World/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2016.06.24_all_days.xlsx",
+                        sheet = "Sheet1",
+                        range = "A2:B5552",
+                        col_names = c("SVIFTSE_dates", "SVIFTSE"))
+SVIFTSE_zoo = zoo(SVIFTSE_df[1:5551,2], as.Date(as.matrix(SVIFTSE_df[1:5551,1])))
+SVIFTSE = as.matrix(SVIFTSE_zoo)
+
+
+
+RVarFTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+                      sheet = "FTSE2001-2019.06.21",
+                      range = 'J2:J4910',
+                      col_names = "FTSE")
+# Note that the Ox-Man institute provides realised VARIANCE as per
+# https://realized.oxford-man.ox.ac.uk/documentation/estimators
+RVFTSE_df = (RVarFTSE_df^0.5)
+RVFTSE_zoo = zoo(RVFTSE_df, as.Date(FTSE_Dates_matrix))
+
+
+
+
+
+####---------------------------------------------------------------------------
+#### Derive variables
+####---------------------------------------------------------------------------
+print("Derive variables")
+
+
+
+
+###---------------------------------------------------------------------------
+### SPX
+###---------------------------------------------------------------------------
+
+# Several points have to be made about the FRED's data at this point:
+#
+# 1st:
+# The 1-, 2-, and 3-month rates are equivalent to the 30-, 60-,
+# and 90-day dates respectively, reported on the Board's Commercial Paper Web
+# page (www.federalreserve.gov/releases/cp/). This is as per the FRED's own
+# website (https://fred.stlouisfed.org/series/DGS1MO#0)'s referance
+# (https://www.federalreserve.gov/releases/h15/current/h15.pdf).
+# Figures are annualized using a 360-day year or bank interest as per
+# https://www.federalreserve.gov/releases/h15/.
+# We are using FRED's Constant Maturity Rate (CMR) data, more info on that:
+# https://www.investopedia.com/terms/c/constantmaturity.asp
+# https://www.investopedia.com/terms/c/cmtindex.asp
+# https://fred.stlouisfed.org/release/tables?rid=18&eid=289&snid=316
+#
+# 2nd: From there,
+# we workout bellow the unit return from holding a one-month Treasury bill over
+# the period from t-1 to t by calculating its differrance in daily price
+# where: Daily price = (((CMR/100)+1)^(-(1/12)))*1000
+#
+US_1MO_r_f=((((((DGS1MO/100)+1)^(-1/12))*1000)-
+               ((((lag(DGS1MO)/100)+1)^(-1/12))*1000))/
+              ((((lag(DGS1MO)/100)+1)^(-(1/12)))*1000))
+US_1MO_r_f_zoo = zoo(US_1MO_r_f, as.Date(SPX_Dates))
+
+
+# Construct the returns variable, R_t (and its laged value, R_tm1)
+# Note  things here:
+#
+# 1st: that due to the diferancing nessesary to calculate 'R',
+# the first value is empty. The comand:
+# as.matrix(((INDEX_df-lag.xts(data.matrix(INDEX_df)))/INDEX_df)-APPROPRIATE_r_f)
+# Where INDEX is SPX or FTSE and APPROPRIATE_r_f is
+# US_1MO_r_f or BoE_5Y_r_f displays this well.
+#
+# 2nd: In order for the correct 'R' values to be associated with the correct
+# dates, the element 'R' has to be changed into a 'zoo' element.
+# This will allow future models to have data points with correct date lables.
+# A vecor element is left however,
+# for libraries and functions that do not support them.
+#
+SPX_R_matrix = as.matrix(((SPX_df-lag.xts(data.matrix(SPX_df)))
+                          /lag.xts(data.matrix(SPX_df)))
+                         -US_1MO_r_f)[2:length(SPX)]
+SPX_R_zoo = zoo(SPX_R_matrix,as.Date(SPX_Datesm1))
+
+
+
+
+
+###---------------------------------------------------------------------------
+### FTSE
+###---------------------------------------------------------------------------
+
+
+BoE_r_f=((((((as.numeric(BoE5YR_zoo)/100)+1)^(-5))*100)-
+            ((((lag(as.numeric(BoE5YR_zoo))/100)+1)^(-5))*100))/
+           ((((lag(as.numeric(BoE5YR_zoo))/100)+1)^(-5)*100)))
+
+BoE_r_f_zoo = zoo(BoE_r_f[2:length(BoE_r_f)],
+                  as.Date(BoE5YR_matrix[2:length(BoE_r_f),1]))
+
+
+FTSE_R_zoo = zoo(na.exclude(as.matrix((FTSE_df-lag.xts(data.matrix(FTSE_df)))
+                           /lag.xts(data.matrix(FTSE_df)))),
+                 as.Date(FTSE_Dates_matrix[2:4909])) - BoE_r_f_zoo
+FTSE_R_matrix = as.matrix(FTSE_R_zoo)
+
+# # Construct Google's Search Vecrot Index (SVI).
+dSVIFTSE=matrix(data.matrix(data.matrix(SVIFTSE)-
+                   lag.xts(data.matrix(SVIFTSE)))[2:length(SVIFTSE)])
+colnames(dSVIFTSE) = c('dSVIFTSE')
+dSVIFTSE_zoo = zoo(dSVIFTSE,
+                   as.Date(as.matrix(SVIFTSE_df[2:5551,1])))
+dSVIFTSE_zoo = dSVIFTSE_zoo - (FTSE_R_zoo*0)
+colnames(dSVIFTSE_zoo) = c('dSVIFTSE')
+dSVIFTSE=matrix(dSVIFTSE_zoo)
+
+
+Dates = as.Date(rownames(as.matrix(dSVIFTSE_zoo)))
+
+
+####---------------------------------------------------------------------------
+#### Descriptive Statistics of variables
+####---------------------------------------------------------------------------
+print("Descriptive Statistics of variables")
+
+
+
+
+
+###---------------------------------------------------------------------------
+### FTSE
+###---------------------------------------------------------------------------
+
+
+
+
+# FTSE excess return
+
+print("plot of FTSE Excess Returns")
+epdfPlot(as.numeric(FTSE_R_zoo), main = "", xlab="")
+pdfPlot(param.list = list(mean=0, sd=sd(FTSE_R_matrix)), add = TRUE, pdf.col = "red")
+pdfPlot(add = TRUE, pdf.col = "blue")
+legend("topright", legend = c("EPDF plot of Excess FTSE Returns", "N[0,Var(Excess FTSE Returns)]", "N(0,1)"), col = c("black", "red", "blue"), lwd = 2 * par("cex"))
+title("PDF Plots")
+
+print("Mean of FTSE_R_zoo")
+mean(FTSE_R_zoo)
+
+print("Standard Deviation of FTSE_R_zoo")
+sd(FTSE_R_zoo)
+
+print("Median of FTSE_R_zoo")
+median(FTSE_R_zoo)
+
+print("Skewness of FTSE_R_zoo")
+skewness(as.numeric(FTSE_R_zoo))
+
+print("Kurtosis of FTSE_R_zoo")
+kurtosis(as.numeric(FTSE_R_zoo))
+
+print("AutoCorrelation Function of FTSE_R_zoo")
+acf(matrix(FTSE_R_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+# FTSE's dSVI
+
+print("Mean of dSVIFTSE")
+mean(dSVIFTSE_zoo)
+
+print("Standard Deviation of dSVIFTSE")
+sd(dSVIFTSE_zoo)
+
+print("Median of dSVIFTSE")
+median(dSVIFTSE_zoo)
+
+print("Skewness of dSVIFTSE")
+skewness(as.numeric(dSVIFTSE_zoo))
+
+print("Kurtosis of dSVIFTSE")
+kurtosis(as.numeric(dSVIFTSE_zoo))
+
+print("AutoCorrelation Function of dSVIFTSE")
+acf(matrix(dSVIFTSE_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of dSVIFTSE")
+adf.test(matrix(dSVIFTSE_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preferance for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(dSVIFTSE_zoo, xlab='Date', ylab='dSVIFTSE', col='black',
+      main='dSVIFTSE', type='l')
+print("PP Test of dSVIFTSE")
+PP.test(dSVIFTSE_zoo)
+
+print("KPSS Test of dSVIFTSE")
+kpss.test(matrix(dSVIFTSE_zoo))
+
+plot(SVIFTSE_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
+     # main='Google Search Vector Index (SVI) for the FTSE index over time',
+     type='l')
+
+
+
+
+# FTSE's Realised Volatility
+
+print("Mean of RVFTSE")
+mean(RVFTSE_zoo)
+
+print("Standard Deviation of RVFTSE")
+sd(RVFTSE_zoo)
+
+print("Median of RVFTSE")
+median(RVFTSE_zoo)
+
+print("Skewness of RVFTSE")
+skewness(as.numeric(RVFTSE_zoo))
+
+print("Kurtosis of RVFTSE")
+kurtosis(as.numeric(RVFTSE_zoo))
+
+print("AutoCorrelation Function of RVFTSE")
+acf(as.numeric(RVFTSE_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+# FTSE's BoE_r_f
+
+
+print("Mean of BoE_r_f")
+mean(BoE_r_f_zoo)
+
+print("Standard Deviation of BoE_r_f")
+sd(BoE_r_f_zoo)
+
+print("Median of BoE_r_f")
+median(BoE_r_f_zoo)
+
+print("Skewness of BoE_r_f")
+skewness(as.numeric(BoE_r_f_zoo))
+
+print("Kurtosis of BoE_r_f")
+kurtosis(as.numeric(BoE_r_f_zoo))
+
+print("AutoCorrelation Function of BoE_r_f")
+acf(as.numeric(BoE_r_f_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+
+# Descriptive Plot
+plot(SVIFTSE_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
+     main='Google Search Vector Index (SVI) for the FTSE index over time', type='l')
+
+
+
+
+###---------------------------------------------------------------------------
+### SPX
+###---------------------------------------------------------------------------
+
+
+# SPX excess return
+
+print("plot of SPX Excess Returns")
+epdfPlot(as.numeric(SPX_R_zoo), main = "", xlab="")
+lines(density(FTSE_R_matrix),col="orange", lwd = 2 * par("cex"))
+pdfPlot(param.list = list(mean=0, sd=sd(FTSE_R_matrix)), add = TRUE, pdf.col = "red")
+pdfPlot(param.list = list(mean=0, sd=sd(SPX_R_zoo)), add = TRUE, pdf.col = "green")
+pdfPlot(add = TRUE, pdf.col = "blue")
+legend("topright", legend = c("EPDF plot of Excess SPX Returns", "EPDF plot of Excess FTSE Returns", "N[0,Var(Excess FTSE Returns)]", "N[0,Var(Excess SPX Returns)]", "N(0,1)"), col = c("black", "orange", "red","green", "blue"), lwd = 2 * par("cex"))
+# title("PDF Plots")
+
+print("Mean of FTSE_R_zoo")
+mean(FTSE_R_zoo)
+
+print("Standard Deviation of FTSE_R_zoo")
+sd(FTSE_R_zoo)
+
+print("Median of FTSE_R_zoo")
+median(FTSE_R_zoo)
+
+print("Skewness of FTSE_R_zoo")
+skewness(as.numeric(FTSE_R_zoo))
+
+print("Kurtosis of FTSE_R_zoo")
+kurtosis(as.numeric(FTSE_R_zoo))
+
+print("AutoCorrelation Function of FTSE_R_zoo")
+acf(matrix(FTSE_R_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+# SPX's Realised Volatility
+
+print("Mean of SPX_RV")
+mean(SPX_RV_zoo)
+
+print("Standard Deviation of SPX_RV")
+sd(SPX_RV_zoo)
+
+print("Median of SPX_RV")
+median(SPX_RV_zoo)
+
+print("Skewness of SPX_RV")
+skewness(as.numeric(SPX_RV_zoo))
+
+print("Kurtosis of SPX_RV")
+kurtosis(as.numeric(SPX_RV_zoo))
+
+print("AutoCorrelation Function of SPX_RV")
+acf(as.numeric(SPX_RV_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+# Descriptive Plot
+plot(SPX_SVI, xlab='Time Period', ylab='SVIFTSE', col='blue',
+     main='Google Search Vector Index 1 (SVI 1) for the SPX index over time', type='l')
+
+plot(SPX_SVI2_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
+     main='Google Search Vector Index 2 (SVI 2) for the SPX index over time', type='l')
+
+plot(SPX_SVICPV_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
+     main='Google Search Vector Index CPV (SVI-CPV) for the SPX index over time', type='l')
+
+plot(SPX_SVICPVUS_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
+     main='Google Search Vector Index CPV-US (SVI-CPV-US) for the SPX index over time', type='l')
+
+
+
+####---------------------------------------------------------------------------
+#### FTSE GARCH models: create, train/fit them and create forecasts
+####---------------------------------------------------------------------------
+
+
+# Set parameters
+
+roll = length(dSVIFTSE_zoo)-252
+
+# This will also be the number of out-of-sample predictions. N.B.: the 253rd
+# value of FTSE_R_zoo corresponds to 2005-01-04, the 1st trading day
+# out-of-sample, the first value after 252.
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-GARCH(1,1) Model
+###----------------------------------------------------------------------------
+
+
+in_sample_GARCH11 = ugarchspec(variance.model = list(model="sGARCH",
+                                           garchOrder = c(1, 1),
+                                           external.regressors = NULL),
+                     mean.model=list(armaOrder = c(1, 0),
+                                     include.mean = TRUE,
+                                     external.regressors = NULL),
+                     distribution.model = "norm")
+in_sample_GARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                 spec=in_sample_GARCH11)
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-GARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+# Non-linear Variance Models are created using the 'rugarch' package for
+# adequacy; then create one-step-ahead forecasts, taking into account new
+# data every step and re-estimating GARCH variables/cofactors.
+GARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                     as.Date(Dates[(252+1):(252+roll)]))
+colnames(GARCH11_mu_hat) = c('GARCH11_mu_hat')
+GARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                               as.Date(Dates[(252+1):(252+roll)]))
+colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
+
+for (i in c(1:roll))
+{GARCH11 = ugarchspec(variance.model = list(model="sGARCH",
+                                            garchOrder = c(1, 1),
+                                            external.regressors = NULL),
+                      mean.model=list(armaOrder = c(1, 0),
+                                      include.mean = TRUE,
+                                      external.regressors = NULL),
+                      distribution.model = "norm")
+try(withTimeout({(GARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                         spec=GARCH11))}
+                , timeout = 3),silent = TRUE)
+
+try((GARCH11fitforecast = ugarchforecast(GARCH11fit, n.ahead = 1,
+                                         n.roll = 0, data = NULL,
+                                         out.sample = 0))
+    ,silent = TRUE
+    # suppressWarnings(expr)
+    )
+
+try((GARCH11_mu_hat[i]=GARCH11fitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((GARCH11_sigma_hat[i]=GARCH11fitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(GARCH11)
+rm(GARCH11fit)
+rm(GARCH11fitforecast)
+}
+# fitted(GARCH11fitforecast)
+
+RV_no_GARCH11_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                          -(na.omit(GARCH11_sigma_hat*0)))
+# This above is just a neat trick that returns strictly the RV (Realised
+# Volatility) values corresponding to the dates for which GARCH11_sigma_hat
+# values are not NA without any new functions or packages.
+
+# Forecast Error, Mean and S.D.:
+GARCH11forecasterror = (na.omit(GARCH11_sigma_hat)
+                        -RV_no_GARCH11_sigma_hat_na_dated)
+colnames(GARCH11forecasterror) = c("GARCH11forecasterror")
+# plot(zoo(GARCH11forecasterror, as.Date(row.names(GARCH11forecasterror)))
+#      , type='l', ylab='GARCH11forecasterror', xlab='Date')
+
+print("Mean of GARCH11forecasterror")
+mean(GARCH11forecasterror)
+print("Standard Deviation GARCH11forecasterror")
+sd(GARCH11forecasterror)
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the GARCH11 model")
+rmse(RV_no_GARCH11_sigma_hat_na_dated, (na.omit(GARCH11_sigma_hat)))
+# Note that this is the same as the bellow:
+# sqrt(mean((RV[(252+1):(length(FTSE_R_matrix)+1)] -
+#              as.matrix((GARCH11fitforecast@forecast[["sigmaFor"]]))[1:roll])
+#           ^2))
+
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-GARCH(1,1)-SVI Model
+###----------------------------------------------------------------------------
+
+
+in_sample_GARCH11SVI = ugarchspec(variance.model = list(model="sGARCH",
+                                                     garchOrder = c(1, 1),
+                                                     external.regressors=
+                                              as.matrix(dSVIFTSE[1:(251+1)])),
+                               mean.model=list(armaOrder = c(1, 0),
+                                               include.mean = TRUE,
+                                               external.regressors=
+                                            as.matrix(dSVIFTSE[1:(251+1)])),
+                               distribution.model = "norm")
+in_sample_GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                 spec=in_sample_GARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-GARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+GARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                     as.Date(Dates[(252+1):(252+roll)]))
+colnames(GARCH11SVI_mu_hat) = c('GARCH11SVI_mu_hat')
+GARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(Dates[(252+1):(252+roll)]))
+colnames(GARCH11SVI_sigma_hat) = c('GARCH11SVI_sigma_hat')
+
+for (i in c(1:roll))
+{GARCH11SVI = ugarchspec(variance.model = list(model="sGARCH",
+                                  garchOrder = c(1, 1),
+                                  external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                      mean.model=list(armaOrder = c(1, 0),
+                                  include.mean = TRUE,
+                                  external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                      distribution.model = "norm")
+try(withTimeout({(GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                         spec=GARCH11SVI))}
+                , timeout = 3),silent = TRUE)
+
+try((GARCH11SVIfitforecast = ugarchforecast(GARCH11SVIfit, n.ahead = 1,
+                                         n.roll = 0, data = NULL,
+                                         out.sample = 0))
+    ,silent = TRUE
+    # suppressWarnings(expr)
+)
+
+try((GARCH11SVI_mu_hat[i]=GARCH11SVIfitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((GARCH11SVI_sigma_hat[i]=GARCH11SVIfitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(GARCH11SVI)
+rm(GARCH11SVIfit)
+rm(GARCH11SVIfitforecast)
+}
+# fitted(GARCH11SVIfitforecast)
+
+
+RV_no_GARCH11SVI_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                    -(na.omit(GARCH11SVI_sigma_hat*0)))
+
+# Forecast Error, Mean and S.D.:
+GARCH11SVIforecasterror = (na.omit(GARCH11SVI_sigma_hat)
+                        -RV_no_GARCH11SVI_sigma_hat_na_dated)
+colnames(GARCH11SVIforecasterror) = c("GARCH11SVIforecasterror")
+
+print("Mean of GARCH11SVIforecasterror")
+mean(GARCH11SVIforecasterror)
+print("Standard Deviation GARCH11SVIforecasterror")
+sd(GARCH11SVIforecasterror)
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the GARCH11-SVI model")
+rmse(RV_no_GARCH11SVI_sigma_hat_na_dated, (na.omit(GARCH11SVI_sigma_hat)))
+
+
+
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-GJRGARCH(1,1) Model
+###----------------------------------------------------------------------------
+
+
+in_sample_GJRGARCH11 = ugarchspec(variance.model = list(model="gjrGARCH",
+                                                     garchOrder = c(1, 1),
+                                                     external.regressors = NULL),
+                               mean.model=list(armaOrder = c(1, 0),
+                                               include.mean = TRUE,
+                                               external.regressors = NULL),
+                               distribution.model = "norm")
+in_sample_GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                 spec=in_sample_GJRGARCH11)
+
+
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-GJRGARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+GJRGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                     as.Date(Dates[(252+1):(252+roll)]))
+colnames(GJRGARCH11_mu_hat) = c('GJRGARCH11_mu_hat')
+GJRGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(Dates[(252+1):(252+roll)]))
+colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
+
+for (i in c(1:roll))
+{GJRGARCH11 = ugarchspec(variance.model = list(model="gjrGARCH",
+                                            garchOrder = c(1, 1),
+                                            external.regressors = NULL),
+                      mean.model=list(armaOrder = c(1, 0),
+                                      include.mean = TRUE,
+                                      external.regressors = NULL),
+                      distribution.model = "norm")
+try(withTimeout({(GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                         spec=GJRGARCH11))}
+                , timeout = 3),silent = TRUE)
+
+try((GJRGARCH11fitforecast = ugarchforecast(GJRGARCH11fit, n.ahead = 1,
+                                         n.roll = 0, data = NULL,
+                                         out.sample = 0))
+    ,silent = TRUE
+)
+
+try((GJRGARCH11_mu_hat[i]=GJRGARCH11fitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((GJRGARCH11_sigma_hat[i]=GJRGARCH11fitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(GJRGARCH11)
+rm(GJRGARCH11fit)
+rm(GJRGARCH11fitforecast)
+}
+
+
+RV_no_GJRGARCH11_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                      -(na.omit(GJRGARCH11_sigma_hat*0)))
+
+# Forecast Error, Mean and S.D.:
+GJRGARCH11forecasterror = (na.omit(GJRGARCH11_sigma_hat)
+                        -RV_no_GJRGARCH11_sigma_hat_na_dated)
+colnames(GJRGARCH11forecasterror) = c("GJRGARCH11forecasterror")
+
+print("Mean of GJRGARCH11forecasterror")
+mean(GJRGARCH11forecasterror)
+print("Standard Deviation GJRGARCH11forecasterror")
+sd(GJRGARCH11forecasterror)
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the GJRGARCH11 model")
+rmse(RV_no_GJRGARCH11_sigma_hat_na_dated, (na.omit(GJRGARCH11_sigma_hat)))
+
+
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-GJRGARCH(1,1)-SVI Model
+###----------------------------------------------------------------------------
+
+
+in_sample_GJRGARCH11SVI = ugarchspec(variance.model = list(model="gjrGARCH",
+                                                        garchOrder = c(1, 1),
+                                                        external.regressors=
+                                                          as.matrix(dSVIFTSE[1:(251+1)])),
+                                  mean.model=list(armaOrder = c(1, 0),
+                                                  include.mean = TRUE,
+                                                  external.regressors=
+                                                    as.matrix(dSVIFTSE[1:(251+1)])),
+                                  distribution.model = "norm")
+in_sample_GJRGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                    spec=in_sample_GJRGARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-GJRGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+GJRGARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(Dates[(252+1):(252+roll)]))
+colnames(GJRGARCH11SVI_mu_hat) = c('GJRGARCH11SVI_mu_hat')
+GJRGARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                           as.Date(Dates[(252+1):(252+roll)]))
+colnames(GJRGARCH11SVI_sigma_hat) = c('GJRGARCH11SVI_sigma_hat')
+
+for (i in c(1:roll))
+{GJRGARCH11SVI = ugarchspec(variance.model = list(model="gjrGARCH",
+                                               garchOrder = c(1, 1),
+                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                         mean.model=list(armaOrder = c(1, 0),
+                                         include.mean = TRUE,
+                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                         distribution.model = "norm")
+try(withTimeout({(GJRGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                            spec=GJRGARCH11SVI))}
+                , timeout = 3),silent = TRUE)
+
+try((GJRGARCH11SVIfitforecast = ugarchforecast(GJRGARCH11SVIfit, n.ahead = 1,
+                                            n.roll = 0, data = NULL,
+                                            out.sample = 0))
+    ,silent = TRUE
+)
+
+try((GJRGARCH11SVI_mu_hat[i]=GJRGARCH11SVIfitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((GJRGARCH11SVI_sigma_hat[i]=GJRGARCH11SVIfitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(GJRGARCH11SVI)
+rm(GJRGARCH11SVIfit)
+rm(GJRGARCH11SVIfitforecast)
+}
+
+
+RV_no_GJRGARCH11SVI_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                    -(na.omit(GJRGARCH11SVI_sigma_hat*0)))
+
+# Forecast Error, Mean and S.D.:
+GJRGARCH11SVIforecasterror = (na.omit(GJRGARCH11SVI_sigma_hat)
+                           -RV_no_GJRGARCH11SVI_sigma_hat_na_dated)
+colnames(GJRGARCH11SVIforecasterror) = c("GJRGARCH11SVIforecasterror")
+
+print("Mean of GJRGARCH11SVIforecasterror")
+mean(GJRGARCH11SVIforecasterror)
+print("Standard Deviation GJRGARCH11SVIforecasterror")
+sd(GJRGARCH11SVIforecasterror)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the GJRGARCH11SVI model")
+rmse(RV_no_GJRGARCH11SVI_sigma_hat_na_dated, (na.omit(GJRGARCH11SVI_sigma_hat)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-EGARCH(1,1) Model
+###----------------------------------------------------------------------------
+
+
+in_sample_EGARCH11 = ugarchspec(variance.model = list(model="eGARCH",
+                                                     garchOrder = c(1, 1),
+                                                     external.regressors = NULL),
+                               mean.model=list(armaOrder = c(1, 0),
+                                               include.mean = TRUE,
+                                               external.regressors = NULL),
+                               distribution.model = "norm")
+in_sample_EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                 spec=in_sample_EGARCH11)
+
+
+
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-EGARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+EGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                     as.Date(Dates[(252+1):(252+roll)]))
+colnames(EGARCH11_mu_hat) = c('EGARCH11_mu_hat')
+EGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(Dates[(252+1):(252+roll)]))
+colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
+
+for (i in c(1:roll))
+{EGARCH11 = ugarchspec(variance.model = list(model="eGARCH",
+                                            garchOrder = c(1, 1),
+                                            external.regressors = NULL),
+                      mean.model=list(armaOrder = c(1, 0),
+                                      include.mean = TRUE,
+                                      external.regressors = NULL),
+                      distribution.model = "norm")
+try(withTimeout({(EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                         spec=EGARCH11))}
+                , timeout = 3),silent = TRUE)
+
+try((EGARCH11fitforecast = ugarchforecast(EGARCH11fit, n.ahead = 1,
+                                         n.roll = 0, data = NULL,
+                                         out.sample = 0))
+    ,silent = TRUE
+)
+
+try((EGARCH11_mu_hat[i]=EGARCH11fitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((EGARCH11_sigma_hat[i]=EGARCH11fitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(EGARCH11)
+rm(EGARCH11fit)
+rm(EGARCH11fitforecast)
+}
+
+
+RV_no_EGARCH11_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                             -(na.omit(EGARCH11_sigma_hat*0)))
+
+# Forecast Error, Mean and S.D.:
+EGARCH11forecasterror = (na.omit(EGARCH11_sigma_hat)
+                        -RV_no_EGARCH11_sigma_hat_na_dated)
+colnames(EGARCH11forecasterror) = c("EGARCH11forecasterror")
+
+
+print("Mean of EGARCH11forecasterror")
+mean(EGARCH11forecasterror)
+print("Standard Deviation EGARCH11forecasterror")
+sd(EGARCH11forecasterror)
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the EGARCH11 model")
+rmse(RV_no_EGARCH11_sigma_hat_na_dated, (na.omit(EGARCH11_sigma_hat)))
+
+
+
+###----------------------------------------------------------------------------
+### In-sample AR(1)-EGARCH(1,1)-SVI Model
+###----------------------------------------------------------------------------
+
+
+in_sample_EGARCH11SVI = ugarchspec(variance.model = list(model="eGARCH",
+                                                        garchOrder = c(1, 1),
+                                                        external.regressors=
+                                                          as.matrix(dSVIFTSE[1:(251+1)])),
+                                  mean.model=list(armaOrder = c(1, 0),
+                                                  include.mean = TRUE,
+                                                  external.regressors=
+                                                    as.matrix(dSVIFTSE[1:(251+1)])),
+                                  distribution.model = "norm")
+in_sample_EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
+                                    spec=in_sample_EGARCH11SVI)
+
+
+
+###----------------------------------------------------------------------------
+### Create the AR(1)-EGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+EGARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(Dates[(252+1):(252+roll)]))
+colnames(EGARCH11SVI_mu_hat) = c('EGARCH11SVI_mu_hat')
+EGARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                           as.Date(Dates[(252+1):(252+roll)]))
+colnames(EGARCH11SVI_sigma_hat) = c('EGARCH11SVI_sigma_hat')
+
+for (i in c(1:roll))
+{EGARCH11SVI = ugarchspec(variance.model = list(model="eGARCH",
+                                               garchOrder = c(1, 1),
+                                    external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                         mean.model=list(armaOrder = c(1, 0),
+                                         include.mean = TRUE,
+                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
+                         distribution.model = "norm")
+try(withTimeout({(EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
+                                            spec=EGARCH11SVI))}
+                , timeout = 3),silent = TRUE)
+
+try((EGARCH11SVIfitforecast = ugarchforecast(EGARCH11SVIfit, n.ahead = 1,
+                                            n.roll = 0, data = NULL,
+                                            out.sample = 0))
+    ,silent = TRUE
+    # suppressWarnings(expr)
+)
+
+try((EGARCH11SVI_mu_hat[i]=EGARCH11SVIfitforecast@forecast[["seriesFor"]])
+    ,silent = TRUE)
+try((EGARCH11SVI_sigma_hat[i]=EGARCH11SVIfitforecast@forecast[["sigmaFor"]])
+    ,silent = TRUE)
+rm(EGARCH11SVI)
+rm(EGARCH11SVIfit)
+rm(EGARCH11SVIfitforecast)
+}
+# fitted(EGARCH11SVIfitforecast)
+
+
+RV_no_EGARCH11SVI_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
+                                                -(na.omit(EGARCH11SVI_sigma_hat*0)))
+
+# Forecast Error, Mean and S.D.:
+EGARCH11SVIforecasterror = (na.omit(EGARCH11SVI_sigma_hat)
+                           -RV_no_EGARCH11SVI_sigma_hat_na_dated)
+colnames(EGARCH11SVIforecasterror) = c("EGARCH11SVIforecasterror")
+
+print("Mean of EGARCH11SVIforecasterror")
+mean(EGARCH11SVIforecasterror)
+print("Standard Deviation EGARCH11SVIforecasterror")
+sd(EGARCH11SVIforecasterror)
+
+# RMSE of the sigma (standard deviations) of the forecast:
+print("RMSE of the sigma (standard deviations) of the forecast from the EGARCH11-SVI model")
+rmse(RV_no_EGARCH11SVI_sigma_hat_na_dated, (na.omit(EGARCH11SVI_sigma_hat)))
+
+
+
+
+###---------------------------------------------------------------------------
+### s.d. forecase D-M tests
+###---------------------------------------------------------------------------
+
+print("This function implements the modified test proposed by Harvey, Leybourne and Newbold (1997). The null hypothesis is that the two methods have the same forecast accuracy. For alternative='greater', as it is here, the alternative hypothesis is that method 2 (SVI) is more accurate than method 1.")
+print("Diebold and Mariano test GARCH11 with and without SVI")
+GARCH11forecasterror_dm = GARCH11forecasterror - (GARCH11SVIforecasterror*0)
+GARCH11SVIforecasterror_dm = GARCH11SVIforecasterror - (GARCH11forecasterror*0)
+dm.test(matrix(GARCH11forecasterror_dm),
+        matrix(GARCH11SVIforecasterror_dm), alternative = "greater")
+
+print("Diebold and Mariano test GJRGARCH11 with and without SVI")
+GJRGARCH11forecasterror_dm = GJRGARCH11forecasterror - (GJRGARCH11SVIforecasterror*0)
+GJRGARCH11SVIforecasterror_dm = GJRGARCH11SVIforecasterror - (GJRGARCH11forecasterror*0)
+dm.test(matrix(GJRGARCH11forecasterror_dm),
+        matrix(GJRGARCH11SVIforecasterror_dm), alternative = "greater")
+
+print("Diebold and Mariano test EGARCH11 with and without SVI")
+EGARCH11forecasterror_dm = EGARCH11forecasterror - (EGARCH11SVIforecasterror*0)
+EGARCH11SVIforecasterror_dm = EGARCH11SVIforecasterror - (EGARCH11forecasterror*0)
+dm.test(matrix(EGARCH11forecasterror_dm),
+        matrix(EGARCH11SVIforecasterror_dm), alternative = "greater")
+
+
+
+
+
+####---------------------------------------------------------------------------
+#### FTSE estimates of the probability of a positive return
+####---------------------------------------------------------------------------
+
+
+###----------------------------------------------------------------------------
+### C&D, Naive and DynProbit Models
+###----------------------------------------------------------------------------
+
+
+##-----------------------------------------------------------------------------
+## Naive-Model and its forecast error statistics
+##-----------------------------------------------------------------------------
+
+
+# Naive-Model's Indicator function according to the GARCH11 Model:
+Naive_I = ifelse(FTSE_R_matrix>0 , 1 , 0)
+
+# Naive Model:
+Naive=(1:(length(FTSE_R_matrix)))
+for(t in c(1:(length(FTSE_R_matrix))))
+{Naive[t] = (1/t) * sum(FTSE_R_matrix[1:t])}
+# Note that the naive model provides the probability of aa positive return in
+# the next time period and therefore spams from 2004-01-06 to 2019-03-13.
+
+
+
+##-----------------------------------------------------------------------------
+## C&D's GARCH models with and without SVI
+## (Model independent variables' construction)
+##-----------------------------------------------------------------------------
+
+
+# mean of return up to time 'k'
+R_mu=(1:length(FTSE_R_matrix))
+for (i in c(1:length(FTSE_R_matrix))){R_mu[i]=mean(FTSE_R_matrix[1:i])}
+
+# standard deviation of return up to time 'k'.
+# Note that its 1st value is NA since there is no standard deviation for a 
+# constant (according to R).
+R_sigma=(1:length(FTSE_R_matrix))
+for (i in c(1:length(FTSE_R_matrix))){R_sigma[i]=sd(FTSE_R_matrix[1:i])}
+R_sigma[1]=0 # Since the variance of a constant is 0.
+
+
+#------------------------------------------------------------------------------
+# GARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11 Model:
+GARCH11_CandD_I = matrix(, nrow=roll, ncol=roll)
+GARCH11_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+GARCH11_CandD_I_t = matrix( - (GARCH11_mu_hat/GARCH11_sigma_hat))
+
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GARCH11_CandD_I_k[k,t] = 
+    ifelse(((FTSE_R_matrix[252+k]-GARCH11_mu_hat[k])/GARCH11_sigma_hat[k])
+           <=GARCH11_CandD_I_t[t+1],
+           1,0)
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the roll'th value) for the same reason.
+GARCH11_CandD_I[k,t] = 
+    ifelse(
+        (is.na(GARCH11_CandD_I_k[k,t])), NA,
+        (sum(GARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11 Model:
+GARCH11_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GARCH11_CandD[i] = 1 - ((GARCH11_CandD_I[i,i])/
+                                length(na.omit(GARCH11_CandD_I[1:i,i])))}
+GARCH11_CandD_zoo = zoo(GARCH11_CandD,
+                           as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GARCH11_CandD_zoo_no_nas=zoo(na.omit(GARCH11_CandD_zoo))
+
+
+# rm(GARCH11_CandD_I_t) # Cleaning datasets
+# rm(GARCH11_CandD_I_k)
+# rm(GARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11-SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11SVI Model:
+GARCH11SVI_CandD_I = matrix(, nrow=roll, ncol=roll)
+GARCH11SVI_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+GARCH11SVI_CandD_I_t = matrix( - (GARCH11SVI_mu_hat/GARCH11SVI_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GARCH11SVI_CandD_I_k[k,t] = 
+  ifelse(((FTSE_R_matrix[252+k]-GARCH11SVI_mu_hat[k])/GARCH11SVI_sigma_hat[k])
+         <=GARCH11SVI_CandD_I_t[t+1],
+         1,0)
+
+GARCH11SVI_CandD_I[k,t] = 
+  ifelse(
+    (is.na(GARCH11SVI_CandD_I_k[k,t])), NA,
+    (sum(GARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11SVI Model:
+GARCH11SVI_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GARCH11SVI_CandD[i] = 1 - ((GARCH11SVI_CandD_I[i,i])/
+                           length(na.omit(GARCH11SVI_CandD_I[1:i,i])))}
+GARCH11SVI_CandD_zoo = zoo(GARCH11SVI_CandD,
+                        as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(GARCH11SVI_CandD_zoo))
+
+
+# rm(GARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(GARCH11SVI_CandD_I_k)
+# rm(GARCH11SVI_CandD_I)
+
+
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11 Model:
+GJRGARCH11_CandD_I = matrix(, nrow=roll, ncol=roll)
+GJRGARCH11_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+GJRGARCH11_CandD_I_t = matrix( - (GJRGARCH11_mu_hat/GJRGARCH11_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GJRGARCH11_CandD_I_k[k,t] = 
+  ifelse(((FTSE_R_matrix[252+k]-GJRGARCH11_mu_hat[k])/GJRGARCH11_sigma_hat[k])
+         <=GJRGARCH11_CandD_I_t[t+1],
+         1,0)
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the roll'th value) for the same reason.
+GJRGARCH11_CandD_I[k,t] = 
+  ifelse(
+    (is.na(GJRGARCH11_CandD_I_k[k,t])), NA,
+    (sum(GJRGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11 Model:
+GJRGARCH11_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GJRGARCH11_CandD[i] = 1 - ((GJRGARCH11_CandD_I[i,i])/
+                           length(na.omit(GJRGARCH11_CandD_I[1:i,i])))}
+GJRGARCH11_CandD_zoo = zoo(GJRGARCH11_CandD,
+                        as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(GJRGARCH11_CandD_zoo))
+
+
+# rm(GJRGARCH11_CandD_I_t) # Cleaning datasets
+# rm(GJRGARCH11_CandD_I_k)
+# rm(GJRGARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11-SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11-SVI Model:
+GARCH11SVI_CandD_I = matrix(, nrow=roll, ncol=roll)
+GARCH11SVI_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+GARCH11SVI_CandD_I_t = matrix( - (GARCH11SVI_mu_hat/GARCH11SVI_sigma_hat))
+
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GARCH11SVI_CandD_I_k[k,t] = 
+    ifelse(((FTSE_R_matrix[252+k]-GARCH11SVI_mu_hat[k])/GARCH11SVI_sigma_hat[k])
+           <=GARCH11SVI_CandD_I_t[t+1],
+           1,0)
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the roll'th value) for the same reason.
+GARCH11SVI_CandD_I[k,t] = 
+    ifelse(
+        (is.na(GARCH11SVI_CandD_I_k[k,t])), NA,
+        (sum(GARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11SVI Model:
+GARCH11SVI_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GARCH11SVI_CandD[i] = 1 - ((GARCH11SVI_CandD_I[i,i])/
+                                length(na.omit(GARCH11SVI_CandD_I[1:i,i])))}
+GARCH11SVI_CandD_zoo = zoo(GARCH11SVI_CandD,
+                           as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(GARCH11SVI_CandD_zoo))
+
+
+# rm(GARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(GARCH11SVI_CandD_I_k)
+# rm(GARCH11SVI_CandD_I)
+
+
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11 Model:
+GJRGARCH11_CandD_I = matrix(, nrow=roll, ncol=roll)
+GJRGARCH11_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+GJRGARCH11_CandD_I_t = matrix( - (GJRGARCH11_mu_hat/GJRGARCH11_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GJRGARCH11_CandD_I_k[k,t] = 
+    ifelse(((FTSE_R_matrix[252+k]-GJRGARCH11_mu_hat[k])/GJRGARCH11_sigma_hat[k])
+           <=GJRGARCH11_CandD_I_t[t+1],
+           1,0)
+
+GJRGARCH11_CandD_I[k,t] = 
+    ifelse(
+        (is.na(GJRGARCH11_CandD_I_k[k,t])), NA,
+        (sum(GJRGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11 Model:
+GJRGARCH11_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GJRGARCH11_CandD[i] = 1 - ((GJRGARCH11_CandD_I[i,i])/
+                             length(na.omit(GJRGARCH11_CandD_I[1:i,i])))}
+GJRGARCH11_CandD_zoo = zoo(GJRGARCH11_CandD,
+                        as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(GJRGARCH11_CandD_zoo))
+
+
+# rm(GJRGARCH11_CandD_I_t) # Cleaning datasets
+# rm(GJRGARCH11_CandD_I_k)
+# rm(GJRGARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11-SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11-SVI Model:
+GJRGARCH11SVI_CandD_I = matrix(, nrow=roll, ncol=roll)
+GJRGARCH11SVI_CandD_I_k = matrix(, nrow=roll, ncol=roll)
+GJRGARCH11SVI_CandD_I_t = matrix( - (GJRGARCH11SVI_mu_hat/GJRGARCH11SVI_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{GJRGARCH11SVI_CandD_I_k[k,t] = 
+ifelse(((FTSE_R_matrix[252+k]-GJRGARCH11SVI_mu_hat[k])/GJRGARCH11SVI_sigma_hat[k])
+       <=GJRGARCH11SVI_CandD_I_t[t+1],
+       1,0)
+
+GJRGARCH11SVI_CandD_I[k,t] = 
+    ifelse(
+        (is.na(GJRGARCH11SVI_CandD_I_k[k,t])), NA,
+        (sum(GJRGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11-SVI Model:
+GJRGARCH11SVI_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{GJRGARCH11SVI_CandD[i] = 1 - ((GJRGARCH11SVI_CandD_I[i,i])/
+                                length(na.omit(GJRGARCH11SVI_CandD_I[1:i,i])))}
+GJRGARCH11SVI_CandD_zoo = zoo(GJRGARCH11SVI_CandD,
+                           as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+GJRGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(GJRGARCH11SVI_CandD_zoo))
+
+
+# rm(GJRGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(GJRGARCH11SVI_CandD_I_k)
+# rm(GJRGARCH11SVI_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# EGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11 Model:
+EGARCH11_CandD_I = matrix(, nrow=roll, ncol=roll)
+EGARCH11_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+EGARCH11_CandD_I_t = matrix( - (EGARCH11_mu_hat/EGARCH11_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{EGARCH11_CandD_I_k[k,t] = 
+    ifelse(((FTSE_R_matrix[252+k]-EGARCH11_mu_hat[k])/EGARCH11_sigma_hat[k])
+           <=EGARCH11_CandD_I_t[t+1],
+           1,0)
+EGARCH11_CandD_I[k,t] = 
+    ifelse(
+        (is.na(EGARCH11_CandD_I_k[k,t])), NA,
+        (sum(EGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11 Model:
+EGARCH11_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{EGARCH11_CandD[i] = 1 - ((EGARCH11_CandD_I[i,i])/
+                             length(na.omit(EGARCH11_CandD_I[1:i,i])))}
+EGARCH11_CandD_zoo = zoo(EGARCH11_CandD,
+                        as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+EGARCH11_CandD_zoo_no_nas=zoo(na.omit(EGARCH11_CandD_zoo))
+
+
+# rm(EGARCH11_CandD_I_t) # Cleaning datasets
+# rm(EGARCH11_CandD_I_k)
+# rm(EGARCH11_CandD_I)
+
+
+#------------------------------------------------------------------------------
+# EGARCH11-SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11-SVI Model:
+EGARCH11SVI_CandD_I = matrix(, nrow=roll, ncol=roll)
+EGARCH11SVI_CandD_I_k= matrix(, nrow=roll, ncol=roll)
+EGARCH11SVI_CandD_I_t = matrix( - (EGARCH11SVI_mu_hat/EGARCH11SVI_sigma_hat))
+
+for(t in c(1:roll))
+{for (k in c(1:t))
+{EGARCH11SVI_CandD_I_k[k,t] = 
+    ifelse(((FTSE_R_matrix[252+k]-EGARCH11SVI_mu_hat[k])/EGARCH11SVI_sigma_hat[k])
+           <=EGARCH11SVI_CandD_I_t[t+1],
+           1,0)
+EGARCH11SVI_CandD_I[k,t] = 
+    ifelse(
+        (is.na(EGARCH11SVI_CandD_I_k[k,t])), NA,
+        (sum(EGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11-SVI Model:
+EGARCH11SVI_CandD=(1:(roll-1))
+for(i in c(1:(roll-1)))
+{EGARCH11SVI_CandD[i] = 1 - ((EGARCH11SVI_CandD_I[i,i])/
+                              length(na.omit(EGARCH11SVI_CandD_I[1:i,i])))}
+EGARCH11SVI_CandD_zoo = zoo(EGARCH11SVI_CandD,
+                         as.Date(Dates[(253+1):(253+(roll-1))]))
+# This zoo object has missing values.
+EGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(EGARCH11SVI_CandD_zoo))
+
+
+# rm(EGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(EGARCH11SVI_CandD_I_k)
+# rm(EGARCH11SVI_CandD_I)
+
+
+
+
+
+
+
+
+
+
+
+##-----------------------------------------------------------------------------
+## compare the predictive performance of each model
+## (forecast error mean, sd, Brier Scores and Diebold&Mariano statistics)
+##-----------------------------------------------------------------------------
+
+# # mean of the probabilistic forecast errors derived from each model
+
+Observed_pi= ifelse(FTSE_R_matrix>0,1,0)
+Observed_pi_zoo = zoo(Observed_pi, as.Date(Dates))
+
+GARCH11_pi_error = GARCH11_CandD_zoo_no_nas - Observed_pi_zoo
+GARCH11SVI_pi_error = GARCH11SVI_CandD_zoo_no_nas - Observed_pi_zoo
+GJRGARCH11_pi_error = GJRGARCH11_CandD_zoo_no_nas - Observed_pi_zoo
+GJRGARCH11SVI_pi_error = GJRGARCH11SVI_CandD_zoo_no_nas - Observed_pi_zoo
+EGARCH11_pi_error = EGARCH11_CandD_zoo_no_nas - Observed_pi_zoo
+EGARCH11SVI_pi_error = EGARCH11SVI_CandD_zoo_no_nas - Observed_pi_zoo
+
+
+
+mean(GARCH11_pi_error)
+sd(GARCH11_pi_error)
+
+mean(GARCH11SVI_pi_error)
+sd(GARCH11SVI_pi_error)
+
+mean(GJRGARCH11_pi_error)
+sd(GJRGARCH11_pi_error) 
+
+mean(GJRGARCH11SVI_pi_error)
+sd(GJRGARCH11SVI_pi_error)
+
+mean(EGARCH11_pi_error)
+sd(EGARCH11_pi_error)
+
+mean(EGARCH11SVI_pi_error)
+sd(EGARCH11SVI_pi_error)
+
+
+# # Brier scores of the probabilistic forecast errors derived from each model
+
+GARCH11_pi_error_Brier_score =
+        (1/length(GARCH11_pi_error))*sum(GARCH11_pi_error^2)
+show(GARCH11_pi_error_Brier_score)
+
+GARCH11SVI_pi_error_Brier_score =
+        (1/length(GARCH11SVI_pi_error))*sum(GARCH11SVI_pi_error^2)
+show(GARCH11SVI_pi_error_Brier_score)
+
+GJRGARCH11_pi_error_Brier_score =
+        (1/length(GJRGARCH11_pi_error))*sum(GJRGARCH11_pi_error^2)
+show(GJRGARCH11_pi_error_Brier_score)
+
+GJRGARCH11SVI_pi_error_Brier_score =
+        (1/length(GJRGARCH11SVI_pi_error))*sum(GJRGARCH11SVI_pi_error^2)
+show(GJRGARCH11SVI_pi_error_Brier_score)
+
+EGARCH11_pi_error_Brier_score =
+        (1/length(EGARCH11_pi_error))*sum(EGARCH11_pi_error^2)
+show(EGARCH11_pi_error_Brier_score)
+
+EGARCH11SVI_pi_error_Brier_score =
+        (1/length(EGARCH11SVI_pi_error))*sum(EGARCH11SVI_pi_error^2)
+show(EGARCH11SVI_pi_error_Brier_score)
+
+
+# # Diebold&Mariano statistics
+# Here the alternative hypothesis is that method 2 is more accurate than
+# method 1; remember that a small p-value indicates strong evidence against
+# the Null Hypothesis.
+
+GARCH11_pi_error_dm = GARCH11_pi_error - (GARCH11SVI_pi_error*0)
+GARCH11SVI_pi_error_dm = GARCH11SVI_pi_error - (GARCH11_pi_error*0)
+dm.test(matrix(GARCH11_pi_error_dm),
+        matrix(GARCH11SVI_pi_error_dm), alternative = "greater")
+
+GJRGARCH11_pi_error_dm = GJRGARCH11_pi_error - (GJRGARCH11SVI_pi_error*0)
+GJRGARCH11SVI_pi_error_dm = GJRGARCH11SVI_pi_error - (GJRGARCH11_pi_error*0)
+dm.test(matrix(GJRGARCH11_pi_error_dm),
+        matrix(GJRGARCH11SVI_pi_error_dm), alternative = c("greater"))
+
+EGARCH11_pi_error_dm = EGARCH11_pi_error - (EGARCH11SVI_pi_error*0)
+EGARCH11SVI_pi_error_dm = EGARCH11SVI_pi_error - (EGARCH11_pi_error*0)
+dm.test(matrix(EGARCH11_pi_error_dm),
+        matrix(EGARCH11SVI_pi_error_dm), alternative = c("greater"))
+
+
+
+
+
+
+####----------------------------------------------------------------------------
+#### Economic significance
+####----------------------------------------------------------------------------
+
+
+# As per Chronopoulos et. al (2018): Investor with a utility function for wealth w is defined as U(w) where
+U = function(w) {-exp((-3) * w)}
+# where A is the investor's degree of risk aversion.
+# in Goetzmann et al. (2007), Della Corte et al. (2010), and Andriosopoulos et al. (2014), we assume that the risk aversion coefficient to be 3.
+
+
+
+
+
+# indicator of the realised direction of the return on the S&P 500 index
+y_d = ifelse(FTSE_R_zoo>0,1,0)
+
+
+# Set the probability threashold at which to invest in the index in our 2d graphs:
+p = 0.5625
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the GARCH11 model
+###----------------------------------------------------------------------------
+
+
+##----------------------------------------------------------------------------
+## 3D graph Low Resolution
+##----------------------------------------------------------------------------
+
+# Set the probability above which we would like our investing algorythm to invest in our 3d grath
+sequance = seq(from = 0, to = 1, by = 0.2)
+
+
+R_Active_GARCH11_p = matrix(, nrow=3575, ncol=length(sequance))
+R_Active_GARCH11_p_cumulated = matrix(, nrow=3575, ncol=length(sequance))
+R_cumulated = matrix(, nrow=3575, ncol=length(sequance))
+
+y_d_GARCH11 = y_d - (GARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11's.
+
+# Set eh probability above which we would like our investing algorythm to invest
+for(P in sequance)
+{P_number = 1 + P*(length(sequance)-1)
+
+# corresponding directional forecast and realised direction
+y_hat_d_GARCH11 = ifelse(GARCH11_CandD_zoo_no_nas>P,1,0)
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GARCH11),1))==1 , 1, 0)
+
+R_Active_GARCH11_p_col_zoo = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_GARCH11*0)) + (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GARCH11*0))))[2:length(y_hat_d_GARCH11)] # note that the trick '(FTSE_R_zoo-(y_hat_d_GARCH11*0))' returns only the R values corresponding to dates present in y_hat_d_GARCH11, which are the ones in omega (omega couldn't be used because it's not a zoo object)
+R_Active_GARCH11_p[,P_number] = R_Active_GARCH11_p_col_zoo
+
+for (i in c(1:length(R_Active_GARCH11_p[,P_number])))
+{R_Active_GARCH11_p_cumulated[i,P_number] = prod((1+R_Active_GARCH11_p[,P_number])[1:i])
+R_cumulated[i,P_number] = prod((1+(FTSE_R_zoo-(R_Active_GARCH11_p_col_zoo*0)))[1:i])}
+}
+
+GARCH11_CandD_3D_LowRes = (plot_ly(z=R_Active_GARCH11_p_cumulated, type="scatter3d") %>%
+layout(
+title = "Portfolio Investing £1 as per the Active C&D Model Using GARCH11 models",
+scene = list(
+  xaxis = list(title = "Investment Threashold"),
+  yaxis = list(title = "Date"),
+  zaxis = list(title = "Portfolio Return")
+)) %>%
+add_surface())
+# chart_link = api_create(GARCH11_CandD_3D, filename = "GARCH11_CandD_3D-public-graph")
+
+
+
+##----------------------------------------------------------------------------
+## 3D graph High Resolution
+##----------------------------------------------------------------------------
+
+# Set the probability above which we would like our investing algorythm to invest in our 3d grath
+BY = 0.0125
+FROM = 0.45
+sequance = seq(from = FROM, to = 0.6, by = BY)
+
+
+R_Active_GARCH11_p = matrix(, nrow=3575, ncol=length(sequance))
+R_Active_GARCH11_p_cumulated = matrix(, nrow=3575, ncol=length(sequance))
+R_cumulated = matrix(, nrow=3575, ncol=length(sequance))
+
+y_d_GARCH11 = y_d - (GARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11's.
+
+# Set eh probability above which we would like our investing algorythm to invest
+for(P in sequance)
+{P_number = 1 + P*(1/BY) - FROM/BY
+
+# corresponding directional forecast and realised direction
+y_hat_d_GARCH11 = ifelse(GARCH11_CandD_zoo_no_nas>P,1,0)
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GARCH11),1))==1 , 1, 0)
+
+R_Active_GARCH11_p_col_zoo = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_GARCH11*0)) + (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GARCH11*0))))[2:length(y_hat_d_GARCH11)] # note that the trick '(FTSE_R_zoo-(y_hat_d_GARCH11*0))' returns only the R values corresponding to dates present in y_hat_d_GARCH11, which are the ones in omega (omega couldn't be used because it's not a zoo object)
+R_Active_GARCH11_p[,P_number] = R_Active_GARCH11_p_col_zoo
+
+for (i in c(1:length(R_Active_GARCH11_p[,P_number])))
+{R_Active_GARCH11_p_cumulated[i,P_number] = prod((1+R_Active_GARCH11_p[,P_number])[1:i])
+R_cumulated[i,P_number] = prod((1+(FTSE_R_zoo-(R_Active_GARCH11_p_col_zoo*0)))[1:i])}
+}
+
+GARCH11_CandD_3D_HighRes = (plot_ly(z=R_Active_GARCH11_p_cumulated, type="scatter3d") %>%
+                             layout(
+                               title = "Portfolio Investing £1 as per the Active C&D Model Using GARCH11 models where 0.45<=P<=0.6",
+                               scene = list(
+                                 xaxis = list(title = "Investment Threashold"),
+                                 yaxis = list(title = "Date"),
+                                 zaxis = list(title = "Portfolio Return")
+                               )) %>%
+                             add_surface())
+# chart_link = api_create(GARCH11_CandD_3D, filename = "GARCH11_CandD_3D-public-graph")
+
+
+
+
+
+##----------------------------------------------------------------------------
+## 2D graph
+##----------------------------------------------------------------------------
+
+# corresponding directional forecast and realised direction
+y_hat_d_GARCH11_2d = ifelse(GARCH11_CandD_zoo_no_nas>p,1,0)
+y_d_GARCH11_2d = y_d - (GARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11-'s.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega_2d = ifelse( (lead(as.matrix(y_hat_d_GARCH11_2d),1))==1 , 1, 0)
+
+R_Active_GARCH11_p_2d = ((lag(omega_2d,1) * (FTSE_R_zoo-(y_hat_d_GARCH11_2d*0)) +
+                            (1-lag(omega_2d,1)) * (BoE_r_f_zoo-(y_hat_d_GARCH11_2d*0))))[2:length(y_hat_d_GARCH11)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_GARCH11_2d*0))' returns only the R values
+# corresponding to dates present in y_hat_d_GARCH11_2d, which are the ones
+# in omega (omega_2d couldn't be used because it's not a zoo object)
+
+R_Active_GARCH11_p_cumulated_2d = matrix(,nrow=length(R_Active_GARCH11_p_2d))
+for (i in c(1:length(R_Active_GARCH11_p_2d)))
+{R_Active_GARCH11_p_cumulated_2d[i] = prod((1+R_Active_GARCH11_p_2d)[1:i])}
+# plot(R_Active_GARCH11_p_cumulated_2d, type='l')
+
+R_cumulated_2d = matrix(,nrow=length(R_Active_GARCH11_p_2d))
+for (i in c(1:length(R_Active_GARCH11_p_2d)))
+{R_cumulated_2d[i] = prod((1+(FTSE_R_zoo-(R_Active_GARCH11_p_2d*0)))[1:i])}
+# plot(R_cumulated_2d, type='l')
+
+plot(zoo(R_Active_GARCH11_p_cumulated_2d,
+         as.Date(zoo::index(y_hat_d_GARCH11_2d[2:length(y_hat_d_GARCH11_2d)]))),
+     type="l",col="red", xlab='Date', #ylim=c(0.5,1.2),
+     ylab='S&P500 index and GARCH11 index cumulated')
+lines(zoo(R_cumulated_2d,
+          as.Date(zoo::index(y_hat_d_GARCH11_2d[2:length(y_hat_d_GARCH11_2d)]))),
+      col="green")
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the GARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_GARCH11SVI = ifelse(GARCH11SVI_CandD_zoo_no_nas>P,1,0)
+y_d_GARCH11SVI = y_d - (GARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has
+# values on dates corresponding to GARCH11-SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GARCH11SVI),1))==1 , 1, 0)
+
+R_Active_GARCH11SVI_p = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_GARCH11SVI*0)) +
+                              (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GARCH11SVI*0))))[2:length(y_hat_d_GARCH11SVI)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_GARCH11SVI*0))' returns only the R values
+# corresponding to dates present in y_hat_d_GARCH11SVI, which are the ones
+# in omega (omega couldn't be used because it's not a zoo object)
+
+R_Active_GARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_GARCH11SVI_p))
+for (i in c(1:length(R_Active_GARCH11SVI_p)))
+{R_Active_GARCH11SVI_p_cumulated[i] = prod((1+R_Active_GARCH11SVI_p)[1:i])}
+# plot(R_Active_GARCH11SVI_p_cumulated, type='l')
+
+R_cumulated = matrix(,nrow=length(R_Active_GARCH11SVI_p))
+for (i in c(1:length(R_Active_GARCH11SVI_p)))
+{R_cumulated[i] = prod((1+(FTSE_R_zoo-(R_Active_GARCH11SVI_p*0)))[1:i])}
+# plot(R_cumulated, type='l')
+
+plot(zoo(R_Active_GARCH11SVI_p_cumulated,
+         as.Date(zoo::index(y_hat_d_GARCH11SVI[2:length(y_hat_d_GARCH11SVI)]))),
+     type="l",col="red", xlab='Date',
+     ylab='S&P500 index and GARCH11SVI index cumulated')
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_GARCH11SVI[2:length(y_hat_d_GARCH11SVI)]))),
+      col="green")
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the GJRGARCH11 model
+###----------------------------------------------------------------------------
+
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_GJRGARCH11 = ifelse(GJRGARCH11_CandD_zoo_no_nas>P,1,0)
+y_d_GJRGARCH11 = y_d - (GJRGARCH11_CandD_zoo_no_nas*0) # This y_d only has
+# values on dates corresponding to GJRGARCH11's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GJRGARCH11),1))==1 , 1, 0)
+
+R_Active_GJRGARCH11_p = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_GJRGARCH11*0)) +
+                              (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GJRGARCH11*0))))[2:length(y_hat_d_GJRGARCH11)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_GJRGARCH11*0))' returns only the R values
+# corresponding to dates present in y_hat_d_GARCH11, which are the ones
+# in omega (omega couldn't be used because it's not a zoo object)
+
+R_Active_GJRGARCH11_p_cumulated = matrix(,nrow=length(R_Active_GJRGARCH11_p))
+for (i in c(1:length(R_Active_GJRGARCH11_p)))
+{R_Active_GJRGARCH11_p_cumulated[i] = prod((1+R_Active_GJRGARCH11_p)[1:i])}
+# plot(R_Active_GJRGARCH11_p_cumulated, type='l')
+
+R_cumulated = matrix(,nrow=length(R_Active_GJRGARCH11_p))
+for (i in c(1:length(R_Active_GJRGARCH11_p)))
+{R_cumulated[i] = prod((1+(FTSE_R_zoo-(R_Active_GJRGARCH11_p*0)))[1:i])}
+# plot(R_cumulated, type='l')
+
+plot(zoo(R_Active_GJRGARCH11_p_cumulated,
+         as.Date(zoo::index(y_hat_d_GJRGARCH11[2:length(y_hat_d_GJRGARCH11)]))),
+     type="l",col="red", xlab='Date',
+     ylab='S&P500 index and GJRGARCH11 index cumulated')
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_GJRGARCH11[2:length(y_hat_d_GJRGARCH11)]))),
+      col="green")
+
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the GJRGARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_GJRGARCH11SVI = ifelse(GJRGARCH11SVI_CandD_zoo_no_nas>P,1,0)
+y_d_GJRGARCH11SVI = y_d - (GJRGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has
+# values on dates corresponding to GJRGARCH11-SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GJRGARCH11SVI),1))==1 , 1, 0)
+
+R_Active_GJRGARCH11SVI_p = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_GJRGARCH11SVI*0)) +
+                                 (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GJRGARCH11SVI*0))))[2:length(y_hat_d_GJRGARCH11SVI)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_GJRGARCH11SVI*0))' returns only the R values
+# corresponding to dates present in y_hat_d_GARCH11SVI, which are the ones
+# in omega (omega couldn't be used because it's not a zoo object)
+
+R_Active_GJRGARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_GJRGARCH11SVI_p))
+for (i in c(1:length(R_Active_GJRGARCH11SVI_p)))
+{R_Active_GJRGARCH11SVI_p_cumulated[i] = prod((1+R_Active_GJRGARCH11SVI_p)[1:i])}
+# plot(R_Active_GJRGARCH11SVI_p_cumulated, type='l')
+
+R_cumulated = matrix(,nrow=length(R_Active_GJRGARCH11SVI_p))
+for (i in c(1:length(R_Active_GJRGARCH11SVI_p)))
+{R_cumulated[i] = prod((1+(FTSE_R_zoo-(R_Active_GJRGARCH11SVI_p*0)))[1:i])}
+# plot(R_cumulated, type='l')
+
+plot(zoo(R_Active_GJRGARCH11SVI_p_cumulated,
+         as.Date(zoo::index(y_hat_d_GJRGARCH11SVI[2:length(y_hat_d_GJRGARCH11SVI)]))),
+     type="l",col="red", xlab='Date',
+     ylab='S&P500 index and GJRGARCH11SVI index cumulated')
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_GJRGARCH11SVI[2:length(y_hat_d_GJRGARCH11SVI)]))),
+      col="green")
+
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the EGARCH11 model
+###----------------------------------------------------------------------------
+
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_EGARCH11 = ifelse(EGARCH11_CandD_zoo_no_nas>P,1,0)
+y_d_EGARCH11 = y_d - (EGARCH11_CandD_zoo_no_nas*0) # This y_d only has
+# values on dates corresponding to EGARCH11's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_EGARCH11),1))==1 , 1, 0)
+
+R_Active_EGARCH11_p = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_EGARCH11*0)) +
+                            (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_EGARCH11*0))))[2:length(y_hat_d_EGARCH11)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_EGARCH11*0))' returns only the R values
+# corresponding to dates present in y_hat_d_EGARCH11, which are the ones
+# in omega (omega couldn't be used because it's not a zoo object)
+
+R_Active_EGARCH11_p_cumulated = matrix(,nrow=length(R_Active_EGARCH11_p))
+for (i in c(1:length(R_Active_EGARCH11_p)))
+{R_Active_EGARCH11_p_cumulated[i] = prod((1+R_Active_EGARCH11_p)[1:i])}
+# plot(R_Active_EGARCH11_p_cumulated, type='l')
+
+R_cumulated = matrix(,nrow=length(R_Active_EGARCH11_p))
+for (i in c(1:length(R_Active_EGARCH11_p)))
+{R_cumulated[i] = prod((1+(FTSE_R_zoo-(R_Active_EGARCH11_p*0)))[1:i])}
+# plot(R_cumulated, type='l')
+
+plot(zoo(R_Active_EGARCH11_p_cumulated,
+         as.Date(zoo::index(y_hat_d_EGARCH11[2:length(y_hat_d_EGARCH11)]))),
+     type="l",col="red", xlab='Date',
+     ylab='S&P500 index and EGARCH11 index cumulated')
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_EGARCH11[2:length(y_hat_d_EGARCH11)]))),
+      col="green")
+
+
+
+
+###----------------------------------------------------------------------------
+### Granger and Pesaran (2000)'s framework using the EGARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_EGARCH11SVI = ifelse(EGARCH11SVI_CandD_zoo_no_nas>P,1,0)
+y_d_EGARCH11SVI = y_d - (EGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has
+# values on dates corresponding to EGARCH11SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_EGARCH11SVI),1))==1 , 1, 0)
+
+R_Active_p = ((lag(omega,1) * (FTSE_R_zoo-(y_hat_d_EGARCH11SVI*0)) +
+                   (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_EGARCH11SVI*0))))[2:length(y_hat_d_EGARCH11SVI)]
+# note that the trick '(FTSE_R_zoo-(y_hat_d_EGARCH11SVI*0))' returns only the R values
+# corresponding to dates present in y_hat_d_EGARCH11SVI, which are the ones
+# in omega (omega couldn't be used because it's not a zoo object)
+
+R_Active_p_cumulated = matrix(,nrow=length(R_Active_p))
+for (i in c(1:length(R_Active_p)))
+{R_Active_p_cumulated[i] = prod((1+R_Active_p)[1:i])}
+# plot(R_Active_p_cumulated, type='l')
+
+R_cumulated = matrix(,nrow=length(R_Active_p))
+for (i in c(1:length(R_Active_p)))
+{R_cumulated[i] = prod((1+(FTSE_R_zoo-(R_Active_p*0)))[1:i])}
+# plot(R_cumulated, type='l')
+
+plot(zoo(R_Active_p_cumulated,
+         as.Date(zoo::index(y_hat_d_EGARCH11SVI[2:length(y_hat_d_EGARCH11SVI)]))),
+     type="l",col="red", xlab='Date',
+     ylab='S&P500 index and EGARCH11SVI index cumulated')
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_EGARCH11SVI[2:length(y_hat_d_EGARCH11SVI)]))),
+      col="green")
+
+
+
+
+####----------------------------------------------------------------------------
+#### End?
+####----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+save.image("C:/Users/johnf/OneDrive/UoE/Disertation/Maths/IDaSRP_077.RData")
+
+
+# sink()
+
+
+
+
+# 
+# # historical averages of positive index returns of up to time
+# # t are used to predict the Rising Return:
+# R_R_m = mean(Observed_pi_zoo * R)
+# 
+# # historical averages of negative index returns of up to time
+# # t are used to predict the Falling Return:
+# 
+# 
+# 
+# xi = (1- tau_m) * (1 - tau_f)
+# 
+# w = ifelse(y_hat_d_EGARCH11SVI == 1,
+#        ifelse(y_d == 1, (R_Active_p), (0)),
+#        ifelse(y_d == 1, (0), (0)))
+# 
+# 
+# 
+# u = function(y_hat_d, y_d)
+# {
+#     ifelse(y_hat_d = 1, R_Active_p_sumed, )
+# }
+
