@@ -152,6 +152,11 @@ SPX_SVI_df = slice(read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/
                    1:length(SPX_Dates))
 SPX_SVI = as.matrix(SPX_SVI_df) # Convert the data frame 'SPX_SVI_df' into a matrix
 
+# Construct Google's Search Vecrot Index (SVI).
+SPX_dSVI = as.matrix(slice(SPX_SVI_df - lag.xts(data.matrix(SPX_SVI)),
+                           2:length(SPX_SVI)))
+colnames(SPX_dSVI) = c('SPX_dSVI')
+
 
 ##---------------------------------------------------------------------------
 ## SVI2
@@ -163,6 +168,11 @@ SPX_SVI2_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/2/SVI
                          col_names = c("SVI2_dates", "SPX_SVI2"))
 SPX_SVI2_zoo = zoo(SPX_SVI2_df[1:5551,2], as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
 SPX_SVI2 = as.matrix(SPX_SVI2_zoo)
+
+SPX_dSVI2_zoo = zoo(SPX_SVI2 - lag.xts(data.matrix(SPX_SVI2)),
+                    as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
+SPX_dSVI2_zoo = SPX_dSVI2_zoo - (SPX_R_zoo*0)
+colnames(SPX_dSVI2_zoo) = c('SPX_dSVI2')
 
 
 ##---------------------------------------------------------------------------
@@ -177,6 +187,11 @@ SPX_SVICPV_zoo = zoo(SPX_SVICPV_df[1:4824,2],
                      as.Date(as.matrix(SPX_SVICPV_df[1:4824,1])))
 SPX_SVICPV = as.matrix(SPX_SVICPV_zoo)
 
+SPX_dSVICPV_all_days_zoo=zoo(SPX_SVICPV-lag.xts(data.matrix(SPX_SVICPV)),
+                             as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+SPX_dSVICPV = SPX_dSVICPV_all_days_zoo - (SPX_R_zoo*0)
+colnames(SPX_dSVICPV) = c('SPX_dSVICPV')
+
 
 ##---------------------------------------------------------------------------
 ## SVI CVP US
@@ -189,6 +204,15 @@ SPX_SVICPVUS_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/C
 SPX_SVICPVUS_zoo = zoo(SPX_SVICPVUS_df[1:4823,2],
                        as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
 SPX_SVICPVUS_matrix = as.matrix(SPX_SVICPVUS_zoo)
+
+
+SPX_dSVICPVUS_all_days_zoo=zoo(SPX_SVICPVUS_matrix-lag.xts(SPX_SVICPVUS_matrix),
+                               as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
+SPX_dSVICPVUS_R = SPX_dSVICPVUS_all_days_zoo-(SPX_R_zoo*0)
+colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_R')
+
+SPX_dSVICPVUS_Rm1 = lag(SPX_dSVICPVUS_all_days_zoo) - (SPX_R_zoo*0)
+colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_Rm1')
 
 
 
@@ -346,7 +370,7 @@ SPX_R_zoo = zoo(SPX_R_matrix,as.Date(SPX_Datesm1))
 
 
 ###---------------------------------------------------------------------------
-### FTSE
+### FTSE (including SVIFTSE)
 ###---------------------------------------------------------------------------
 
 
@@ -534,23 +558,23 @@ pdfPlot(add = TRUE, pdf.col = "blue")
 legend("topright", legend = c("EPDF plot of Excess SPX Returns", "EPDF plot of Excess FTSE Returns", "N[0,Var(Excess FTSE Returns)]", "N[0,Var(Excess SPX Returns)]", "N(0,1)"), col = c("black", "orange", "red","green", "blue"), lwd = 2 * par("cex"))
 # title("PDF Plots")
 
-print("Mean of FTSE_R_zoo")
-mean(FTSE_R_zoo)
+print("Mean of SPX_R_zoo")
+mean(SPX_R_zoo)
 
-print("Standard Deviation of FTSE_R_zoo")
-sd(FTSE_R_zoo)
+print("Standard Deviation of SPX_R_zoo")
+sd(SPX_R_zoo)
 
-print("Median of FTSE_R_zoo")
-median(FTSE_R_zoo)
+print("Median of SPX_R_zoo")
+median(SPX_R_zoo)
 
-print("Skewness of FTSE_R_zoo")
-skewness(as.numeric(FTSE_R_zoo))
+print("Skewness of SPX_R_zoo")
+skewness(as.numeric(SPX_R_zoo))
 
-print("Kurtosis of FTSE_R_zoo")
-kurtosis(as.numeric(FTSE_R_zoo))
+print("Kurtosis of SPX_R_zoo")
+kurtosis(as.numeric(SPX_R_zoo))
 
-print("AutoCorrelation Function of FTSE_R_zoo")
-acf(matrix(FTSE_R_zoo), lag.max = 1, plot = FALSE)
+print("AutoCorrelation Function of SPX_R_zoo")
+acf(matrix(SPX_R_zoo), lag.max = 1, plot = FALSE)
 
 
 
@@ -574,6 +598,128 @@ kurtosis(as.numeric(SPX_RV_zoo))
 
 print("AutoCorrelation Function of SPX_RV")
 acf(as.numeric(SPX_RV_zoo), lag.max = 1, plot = FALSE)
+
+
+
+# SPX's r_f
+
+print("Mean of US_1MO_r_f")
+mean(US_1MO_r_f[2:length(US_1MO_r_f)])
+
+print("Standard Deviation of US_1MO_r_f")
+sd(US_1MO_r_f[2:length(US_1MO_r_f)])
+
+print("Median of US_1MO_r_f")
+median(US_1MO_r_f[2:length(US_1MO_r_f)])
+
+print("Skewness of US_1MO_r_f")
+skewness(as.numeric(US_1MO_r_f[2:length(US_1MO_r_f)]))
+
+print("Kurtosis of US_1MO_r_f")
+kurtosis(as.numeric(US_1MO_r_f[2:length(US_1MO_r_f)]))
+
+print("AutoCorrelation Function of US_1MO_r_f")
+acf(as.numeric(US_1MO_r_f[2:length(US_1MO_r_f)]), lag.max = 1, plot = FALSE)
+
+
+
+
+
+# SPX's SVI1
+
+print("Mean of SPX_SVI")
+mean(SPX_SVI)
+
+print("Standard Deviation of SPX_SVI")
+sd(SPX_SVI)
+
+print("Median of SPX_SVI")
+median(SPX_SVI)
+
+print("Skewness of SPX_SVI")
+skewness(as.numeric(SPX_SVI))
+
+print("Kurtosis of SPX_SVI")
+kurtosis(as.numeric(SPX_SVI))
+
+print("AutoCorrelation Function of SPX_SVI")
+acf(as.numeric(SPX_SVI), lag.max = 1, plot = FALSE)
+
+
+
+
+# SPX's SPX_dSVI2_zoo
+
+print("Mean of SPX_dSVI2")
+mean(SPX_dSVI2_zoo)
+
+print("Standard Deviation of SPX_dSVI2")
+sd(SPX_dSVI2_zoo)
+
+print("Median of SPX_dSVI2")
+median(SPX_dSVI2_zoo)
+
+print("Skewness of SPX_dSVI2")
+skewness(as.numeric(SPX_dSVI2_zoo))
+
+print("Kurtosis of SPX_dSVI2")
+kurtosis(as.numeric(SPX_dSVI2_zoo))
+
+print("AutoCorrelation Function of SPX_dSVI2")
+acf(as.numeric(SPX_dSVI2_zoo), lag.max = 1, plot = FALSE)
+
+
+
+
+
+# SPX's SPX_SVICPV
+
+print("Mean of SPX_SVICPV")
+mean(SPX_dSVICPV)
+
+print("Standard Deviation of SPX_SVICPV")
+sd(SPX_dSVICPV)
+
+print("Median of SPX_SVICPV")
+median(SPX_dSVICPV)
+
+print("Skewness of SPX_SVICPV")
+skewness(as.numeric(SPX_dSVICPV))
+
+print("Kurtosis of SPX_SVICPV")
+kurtosis(as.numeric(SPX_dSVICPV))
+
+print("AutoCorrelation Function of SPX_SVICPV")
+acf(as.numeric(SPX_dSVICPV), lag.max = 1, plot = FALSE)
+
+
+
+
+
+
+# SPX's SPX_dSVICPVUS_all_days_zoo
+
+print("Mean of SPX_dSVICPVUS_R")
+mean(SPX_dSVICPVUS_R)
+
+print("Standard Deviation of SPX_dSVICPVUS_R")
+sd(SPX_dSVICPVUS_R)
+
+print("Median of SPX_dSVICPVUS_R")
+median(SPX_dSVICPVUS_R)
+
+print("Skewness of SPX_dSVICPVUS_R")
+skewness(as.numeric(SPX_dSVICPVUS_R))
+
+print("Kurtosis of SPX_dSVICPVUS_R")
+kurtosis(as.numeric(SPX_dSVICPVUS_R))
+
+print("AutoCorrelation Function of SPX_dSVICPVUS_R")
+acf(as.numeric(SPX_dSVICPVUS_R), lag.max = 1, plot = FALSE)
+
+
+
+
 
 
 
