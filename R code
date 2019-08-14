@@ -607,18 +607,22 @@ roll = length(dSVIFTSE_zoo)-252
 # out-of-sample, the first value after 252.
 
 
+# Define functions to make our code easier to read
+GARCH_model_spec = function(mod, exreg)
+{ugarchspec(variance.model = list(model=mod, garchOrder = c(1, 1),
+                                  external.regressors = exreg),
+            mean.model=list(armaOrder = c(1, 0), include.mean = TRUE,
+                            external.regressors = exreg),
+            distribution.model = "norm")}
+
+GARCH_model_forecast = function(mod)
+{ugarchforecast(mod, n.ahead = 1, n.roll = 0, data = NULL, out.sample = 0)}
+
 ###----------------------------------------------------------------------------
 ### In-sample AR(1)-GARCH(1,1) Model
-###----------------------------------------------------------------------------
+###---------------------------------------------------------------------------
 
-
-in_sample_GARCH11 = ugarchspec(variance.model = list(model="sGARCH",
-                                           garchOrder = c(1, 1),
-                                           external.regressors = NULL),
-                     mean.model=list(armaOrder = c(1, 0),
-                                     include.mean = TRUE,
-                                     external.regressors = NULL),
-                     distribution.model = "norm")
+in_sample_GARCH11 = GARCH_model_spec(mod="sGARCH", exreg= NULL)
 in_sample_GARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
                                  spec=in_sample_GARCH11)
 
@@ -639,20 +643,12 @@ GARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
 colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
 
 for (i in c(1:roll))
-{GARCH11 = ugarchspec(variance.model = list(model="sGARCH",
-                                            garchOrder = c(1, 1),
-                                            external.regressors = NULL),
-                      mean.model=list(armaOrder = c(1, 0),
-                                      include.mean = TRUE,
-                                      external.regressors = NULL),
-                      distribution.model = "norm")
+{GARCH11 = GARCH_model_spec(mod="sGARCH", exreg= NULL)
 try(withTimeout({(GARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
                                          spec=GARCH11))}
                 , timeout = 3),silent = TRUE)
 
-try((GARCH11fitforecast = ugarchforecast(GARCH11fit, n.ahead = 1,
-                                         n.roll = 0, data = NULL,
-                                         out.sample = 0))
+try((GARCH11fitforecast = GARCH_model_forecast(mod = GARCH11fit))
     ,silent = TRUE
     # suppressWarnings(expr)
     )
@@ -700,17 +696,9 @@ rmse(RV_no_GARCH11_sigma_hat_na_dated, (na.omit(GARCH11_sigma_hat)))
 ###----------------------------------------------------------------------------
 
 
-in_sample_GARCH11SVI = ugarchspec(variance.model = list(model="sGARCH",
-                                                     garchOrder = c(1, 1),
-                                                     external.regressors=
-                                              as.matrix(dSVIFTSE[1:(251+1)])),
-                               mean.model=list(armaOrder = c(1, 0),
-                                               include.mean = TRUE,
-                                               external.regressors=
-                                            as.matrix(dSVIFTSE[1:(251+1)])),
-                               distribution.model = "norm")
+in_sample_GARCH11SVI = GARCH_model_spec(mod = "sGARCH", exreg = as.matrix(dSVIFTSE[1:(251+1)]))
 in_sample_GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
-                                 spec=in_sample_GARCH11SVI)
+                                    spec=in_sample_GARCH11SVI)
 
 
 ###----------------------------------------------------------------------------
@@ -718,37 +706,21 @@ in_sample_GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
 ###----------------------------------------------------------------------------
 
 
-
-GARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
-                     as.Date(Dates[(252+1):(252+roll)]))
+GARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(GARCH11SVI_mu_hat) = c('GARCH11SVI_mu_hat')
-GARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
-                        as.Date(Dates[(252+1):(252+roll)]))
+GARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(GARCH11SVI_sigma_hat) = c('GARCH11SVI_sigma_hat')
 
-for (i in c(1:roll))
-{GARCH11SVI = ugarchspec(variance.model = list(model="sGARCH",
-                                  garchOrder = c(1, 1),
-                                  external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                      mean.model=list(armaOrder = c(1, 0),
-                                  include.mean = TRUE,
-                                  external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                      distribution.model = "norm")
-try(withTimeout({(GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
-                                         spec=GARCH11SVI))}
-                , timeout = 3),silent = TRUE)
+for (i in c(1:roll)){
+GARCH11SVI = GARCH_model_spec(mod= "sGARCH", exreg = as.matrix(dSVIFTSE[1:(251+i)]))
 
-try((GARCH11SVIfitforecast = ugarchforecast(GARCH11SVIfit, n.ahead = 1,
-                                         n.roll = 0, data = NULL,
-                                         out.sample = 0))
-    ,silent = TRUE
-    # suppressWarnings(expr)
-)
+try(withTimeout({(GARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)], spec=GARCH11SVI))}, timeout = 3),silent = TRUE)
 
-try((GARCH11SVI_mu_hat[i]=GARCH11SVIfitforecast@forecast[["seriesFor"]])
-    ,silent = TRUE)
-try((GARCH11SVI_sigma_hat[i]=GARCH11SVIfitforecast@forecast[["sigmaFor"]])
-    ,silent = TRUE)
+try((GARCH11SVIfitforecast = GARCH_model_forecast(mod = GARCH11SVIfit)),silent = TRUE)
+
+try((GARCH11SVI_mu_hat[i]=GARCH11SVIfitforecast@forecast[["seriesFor"]]), silent = TRUE)
+try((GARCH11SVI_sigma_hat[i]=GARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
 rm(GARCH11SVI)
 rm(GARCH11SVIfit)
 rm(GARCH11SVIfitforecast)
@@ -782,15 +754,8 @@ rmse(RV_no_GARCH11SVI_sigma_hat_na_dated, (na.omit(GARCH11SVI_sigma_hat)))
 ###----------------------------------------------------------------------------
 
 
-in_sample_GJRGARCH11 = ugarchspec(variance.model = list(model="gjrGARCH",
-                                                     garchOrder = c(1, 1),
-                                                     external.regressors = NULL),
-                               mean.model=list(armaOrder = c(1, 0),
-                                               include.mean = TRUE,
-                                               external.regressors = NULL),
-                               distribution.model = "norm")
-in_sample_GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
-                                 spec=in_sample_GJRGARCH11)
+in_sample_GJRGARCH11 = GARCH_model_spec("gjrGARCH", exreg= NULL)
+in_sample_GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)], spec=in_sample_GJRGARCH11)
 
 
 
@@ -800,35 +765,21 @@ in_sample_GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
 ###----------------------------------------------------------------------------
 
 
-GJRGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
-                     as.Date(Dates[(252+1):(252+roll)]))
+GJRGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(GJRGARCH11_mu_hat) = c('GJRGARCH11_mu_hat')
-GJRGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
-                        as.Date(Dates[(252+1):(252+roll)]))
+GJRGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
 
 for (i in c(1:roll))
-{GJRGARCH11 = ugarchspec(variance.model = list(model="gjrGARCH",
-                                            garchOrder = c(1, 1),
-                                            external.regressors = NULL),
-                      mean.model=list(armaOrder = c(1, 0),
-                                      include.mean = TRUE,
-                                      external.regressors = NULL),
-                      distribution.model = "norm")
-try(withTimeout({(GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
-                                         spec=GJRGARCH11))}
+{GJRGARCH11 = GARCH_model_spec(mod = "gjrGARCH", exreg = NULL)
+try(withTimeout({(GJRGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)], spec=GJRGARCH11))}
                 , timeout = 3),silent = TRUE)
 
-try((GJRGARCH11fitforecast = ugarchforecast(GJRGARCH11fit, n.ahead = 1,
-                                         n.roll = 0, data = NULL,
-                                         out.sample = 0))
-    ,silent = TRUE
-)
+try((GJRGARCH11fitforecast = GARCH_model_forecast(mod = GJRGARCH11fit)),silent = TRUE)
 
-try((GJRGARCH11_mu_hat[i]=GJRGARCH11fitforecast@forecast[["seriesFor"]])
-    ,silent = TRUE)
-try((GJRGARCH11_sigma_hat[i]=GJRGARCH11fitforecast@forecast[["sigmaFor"]])
-    ,silent = TRUE)
+try((GJRGARCH11_mu_hat[i]=GJRGARCH11fitforecast@forecast[["seriesFor"]]), silent = TRUE)
+try((GJRGARCH11_sigma_hat[i]=GJRGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
 rm(GJRGARCH11)
 rm(GJRGARCH11fit)
 rm(GJRGARCH11fitforecast)
@@ -860,17 +811,9 @@ rmse(RV_no_GJRGARCH11_sigma_hat_na_dated, (na.omit(GJRGARCH11_sigma_hat)))
 ###----------------------------------------------------------------------------
 
 
-in_sample_GJRGARCH11SVI = ugarchspec(variance.model = list(model="gjrGARCH",
-                                                        garchOrder = c(1, 1),
-                                                        external.regressors=
-                                                          as.matrix(dSVIFTSE[1:(251+1)])),
-                                  mean.model=list(armaOrder = c(1, 0),
-                                                  include.mean = TRUE,
-                                                  external.regressors=
-                                                    as.matrix(dSVIFTSE[1:(251+1)])),
-                                  distribution.model = "norm")
+in_sample_GJRGARCH11SVI = GARCH_model_spec("gjrGARCH", as.matrix(dSVIFTSE[1:(251+1)]))
 in_sample_GJRGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
-                                    spec=in_sample_GJRGARCH11SVI)
+                                       spec=in_sample_GJRGARCH11SVI)
 
 
 ###----------------------------------------------------------------------------
@@ -886,27 +829,16 @@ GJRGARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
 colnames(GJRGARCH11SVI_sigma_hat) = c('GJRGARCH11SVI_sigma_hat')
 
 for (i in c(1:roll))
-{GJRGARCH11SVI = ugarchspec(variance.model = list(model="gjrGARCH",
-                                               garchOrder = c(1, 1),
-                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                         mean.model=list(armaOrder = c(1, 0),
-                                         include.mean = TRUE,
-                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                         distribution.model = "norm")
+{GJRGARCH11SVI = GARCH_model_spec(mod = "gjrGARCH", exreg=as.matrix(dSVIFTSE[1:(251+i)]))
 try(withTimeout({(GJRGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
                                             spec=GJRGARCH11SVI))}
                 , timeout = 3),silent = TRUE)
 
-try((GJRGARCH11SVIfitforecast = ugarchforecast(GJRGARCH11SVIfit, n.ahead = 1,
-                                            n.roll = 0, data = NULL,
-                                            out.sample = 0))
-    ,silent = TRUE
-)
+try((GJRGARCH11SVIfitforecast = GARCH_model_forecast(mod = GJRGARCH11SVIfit)) ,silent = TRUE)
 
-try((GJRGARCH11SVI_mu_hat[i]=GJRGARCH11SVIfitforecast@forecast[["seriesFor"]])
-    ,silent = TRUE)
-try((GJRGARCH11SVI_sigma_hat[i]=GJRGARCH11SVIfitforecast@forecast[["sigmaFor"]])
-    ,silent = TRUE)
+try((GJRGARCH11SVI_mu_hat[i]=GJRGARCH11SVIfitforecast@forecast[["seriesFor"]]), silent = TRUE)
+try((GJRGARCH11SVI_sigma_hat[i]=GJRGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
 rm(GJRGARCH11SVI)
 rm(GJRGARCH11SVIfit)
 rm(GJRGARCH11SVIfitforecast)
@@ -923,64 +855,13 @@ colnames(GJRGARCH11SVIforecasterror) = c("GJRGARCH11SVIforecasterror")
 
 print("Mean of GJRGARCH11SVIforecasterror")
 mean(GJRGARCH11SVIforecasterror)
+
 print("Standard Deviation GJRGARCH11SVIforecasterror")
 sd(GJRGARCH11SVIforecasterror)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # RMSE of the sigma (standard deviations) of the forecast:
 print("RMSE of the sigma (standard deviations) of the forecast from the GJRGARCH11SVI model")
 rmse(RV_no_GJRGARCH11SVI_sigma_hat_na_dated, (na.omit(GJRGARCH11SVI_sigma_hat)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -989,16 +870,9 @@ rmse(RV_no_GJRGARCH11SVI_sigma_hat_na_dated, (na.omit(GJRGARCH11SVI_sigma_hat)))
 ###----------------------------------------------------------------------------
 
 
-in_sample_EGARCH11 = ugarchspec(variance.model = list(model="eGARCH",
-                                                     garchOrder = c(1, 1),
-                                                     external.regressors = NULL),
-                               mean.model=list(armaOrder = c(1, 0),
-                                               include.mean = TRUE,
-                                               external.regressors = NULL),
-                               distribution.model = "norm")
+in_sample_EGARCH11 = GARCH_model_spec(mod="eGARCH", exreg= NULL)
 in_sample_EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
                                  spec=in_sample_EGARCH11)
-
 
 
 
@@ -1008,35 +882,21 @@ in_sample_EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
 ###----------------------------------------------------------------------------
 
 
-EGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
-                     as.Date(Dates[(252+1):(252+roll)]))
+EGARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(EGARCH11_mu_hat) = c('EGARCH11_mu_hat')
-EGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
-                        as.Date(Dates[(252+1):(252+roll)]))
+EGARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
 
 for (i in c(1:roll))
-{EGARCH11 = ugarchspec(variance.model = list(model="eGARCH",
-                                            garchOrder = c(1, 1),
-                                            external.regressors = NULL),
-                      mean.model=list(armaOrder = c(1, 0),
-                                      include.mean = TRUE,
-                                      external.regressors = NULL),
-                      distribution.model = "norm")
-try(withTimeout({(EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
-                                         spec=EGARCH11))}
+{EGARCH11 = GARCH_model_spec(mod = "eGARCH", exreg = NULL)
+try(withTimeout({(EGARCH11fit = ugarchfit(data = FTSE_R_matrix[1:(251+i)], spec=EGARCH11))}
                 , timeout = 3),silent = TRUE)
 
-try((EGARCH11fitforecast = ugarchforecast(EGARCH11fit, n.ahead = 1,
-                                         n.roll = 0, data = NULL,
-                                         out.sample = 0))
-    ,silent = TRUE
-)
+try((EGARCH11fitforecast = GARCH_model_forecast(mod = EGARCH11fit)),silent = TRUE)
 
-try((EGARCH11_mu_hat[i]=EGARCH11fitforecast@forecast[["seriesFor"]])
-    ,silent = TRUE)
-try((EGARCH11_sigma_hat[i]=EGARCH11fitforecast@forecast[["sigmaFor"]])
-    ,silent = TRUE)
+try((EGARCH11_mu_hat[i]=EGARCH11fitforecast@forecast[["seriesFor"]]), silent = TRUE)
+try((EGARCH11_sigma_hat[i]=EGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
 rm(EGARCH11)
 rm(EGARCH11fit)
 rm(EGARCH11fitforecast)
@@ -1047,13 +907,13 @@ RV_no_EGARCH11_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
                                              -(na.omit(EGARCH11_sigma_hat*0)))
 
 # Forecast Error, Mean and S.D.:
-EGARCH11forecasterror = (na.omit(EGARCH11_sigma_hat)
-                        -RV_no_EGARCH11_sigma_hat_na_dated)
+EGARCH11forecasterror = (na.omit(EGARCH11_sigma_hat)-RV_no_EGARCH11_sigma_hat_na_dated)
 colnames(EGARCH11forecasterror) = c("EGARCH11forecasterror")
 
 
 print("Mean of EGARCH11forecasterror")
 mean(EGARCH11forecasterror)
+
 print("Standard Deviation EGARCH11forecasterror")
 sd(EGARCH11forecasterror)
 
@@ -1068,15 +928,7 @@ rmse(RV_no_EGARCH11_sigma_hat_na_dated, (na.omit(EGARCH11_sigma_hat)))
 ###----------------------------------------------------------------------------
 
 
-in_sample_EGARCH11SVI = ugarchspec(variance.model = list(model="eGARCH",
-                                                        garchOrder = c(1, 1),
-                                                        external.regressors=
-                                                          as.matrix(dSVIFTSE[1:(251+1)])),
-                                  mean.model=list(armaOrder = c(1, 0),
-                                                  include.mean = TRUE,
-                                                  external.regressors=
-                                                    as.matrix(dSVIFTSE[1:(251+1)])),
-                                  distribution.model = "norm")
+in_sample_EGARCH11SVI = GARCH_model_spec(mod = "eGARCH", exreg = as.matrix(dSVIFTSE[1:(251+1)]))
 in_sample_EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
                                     spec=in_sample_EGARCH11SVI)
 
@@ -1088,36 +940,21 @@ in_sample_EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+1)],
 
 
 
-EGARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
-                        as.Date(Dates[(252+1):(252+roll)]))
+EGARCH11SVI_mu_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(EGARCH11SVI_mu_hat) = c('EGARCH11SVI_mu_hat')
-EGARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
-                           as.Date(Dates[(252+1):(252+roll)]))
+EGARCH11SVI_sigma_hat = zoo(matrix(, nrow=roll, ncol=1), as.Date(Dates[(252+1):(252+roll)]))
 colnames(EGARCH11SVI_sigma_hat) = c('EGARCH11SVI_sigma_hat')
 
 for (i in c(1:roll))
-{EGARCH11SVI = ugarchspec(variance.model = list(model="eGARCH",
-                                               garchOrder = c(1, 1),
-                                    external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                         mean.model=list(armaOrder = c(1, 0),
-                                         include.mean = TRUE,
-                                   external.regressors = as.matrix(dSVIFTSE[1:(251+i)])),
-                         distribution.model = "norm")
-try(withTimeout({(EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)],
-                                            spec=EGARCH11SVI))}
+{EGARCH11SVI = GARCH_model_spec(mod = "eGARCH", exreg = as.matrix(dSVIFTSE[1:(251+i)]))
+try(withTimeout({(EGARCH11SVIfit = ugarchfit(data = FTSE_R_matrix[1:(251+i)], spec=EGARCH11SVI))}
                 , timeout = 3),silent = TRUE)
 
-try((EGARCH11SVIfitforecast = ugarchforecast(EGARCH11SVIfit, n.ahead = 1,
-                                            n.roll = 0, data = NULL,
-                                            out.sample = 0))
-    ,silent = TRUE
-    # suppressWarnings(expr)
-)
+try((EGARCH11SVIfitforecast = GARCH_model_forecast(mod = EGARCH11SVIfit)), silent = TRUE)
 
-try((EGARCH11SVI_mu_hat[i]=EGARCH11SVIfitforecast@forecast[["seriesFor"]])
-    ,silent = TRUE)
-try((EGARCH11SVI_sigma_hat[i]=EGARCH11SVIfitforecast@forecast[["sigmaFor"]])
-    ,silent = TRUE)
+try((EGARCH11SVI_mu_hat[i]=EGARCH11SVIfitforecast@forecast[["seriesFor"]]), silent = TRUE)
+try((EGARCH11SVI_sigma_hat[i]=EGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
 rm(EGARCH11SVI)
 rm(EGARCH11SVIfit)
 rm(EGARCH11SVIfitforecast)
@@ -1129,12 +966,13 @@ RV_no_EGARCH11SVI_sigma_hat_na_dated = as.matrix(RVFTSE_zoo
                                                 -(na.omit(EGARCH11SVI_sigma_hat*0)))
 
 # Forecast Error, Mean and S.D.:
-EGARCH11SVIforecasterror = (na.omit(EGARCH11SVI_sigma_hat)
-                           -RV_no_EGARCH11SVI_sigma_hat_na_dated)
+EGARCH11SVIforecasterror = (na.omit(EGARCH11SVI_sigma_hat)-RV_no_EGARCH11SVI_sigma_hat_na_dated)
 colnames(EGARCH11SVIforecasterror) = c("EGARCH11SVIforecasterror")
+
 
 print("Mean of EGARCH11SVIforecasterror")
 mean(EGARCH11SVIforecasterror)
+
 print("Standard Deviation EGARCH11SVIforecasterror")
 sd(EGARCH11SVIforecasterror)
 
@@ -1153,20 +991,17 @@ print("This function implements the modified test proposed by Harvey, Leybourne 
 print("Diebold and Mariano test GARCH11 with and without SVI")
 GARCH11forecasterror_dm = GARCH11forecasterror - (GARCH11SVIforecasterror*0)
 GARCH11SVIforecasterror_dm = GARCH11SVIforecasterror - (GARCH11forecasterror*0)
-dm.test(matrix(GARCH11forecasterror_dm),
-        matrix(GARCH11SVIforecasterror_dm), alternative = "greater")
+dm.test(matrix(GARCH11forecasterror_dm), matrix(GARCH11SVIforecasterror_dm), alternative = "greater")
 
 print("Diebold and Mariano test GJRGARCH11 with and without SVI")
 GJRGARCH11forecasterror_dm = GJRGARCH11forecasterror - (GJRGARCH11SVIforecasterror*0)
 GJRGARCH11SVIforecasterror_dm = GJRGARCH11SVIforecasterror - (GJRGARCH11forecasterror*0)
-dm.test(matrix(GJRGARCH11forecasterror_dm),
-        matrix(GJRGARCH11SVIforecasterror_dm), alternative = "greater")
+dm.test(matrix(GJRGARCH11forecasterror_dm), matrix(GJRGARCH11SVIforecasterror_dm), alternative = "greater")
 
 print("Diebold and Mariano test EGARCH11 with and without SVI")
 EGARCH11forecasterror_dm = EGARCH11forecasterror - (EGARCH11SVIforecasterror*0)
 EGARCH11SVIforecasterror_dm = EGARCH11SVIforecasterror - (EGARCH11forecasterror*0)
-dm.test(matrix(EGARCH11forecasterror_dm),
-        matrix(EGARCH11SVIforecasterror_dm), alternative = "greater")
+dm.test(matrix(EGARCH11forecasterror_dm), matrix(EGARCH11SVIforecasterror_dm), alternative = "greater")
 
 
 
@@ -1241,8 +1076,7 @@ for(t in c(1:roll))
 # each model's missing value.
 # We also los the last value (the roll'th value) for the same reason.
 GARCH11_CandD_I[k,t] = 
-    ifelse(
-        (is.na(GARCH11_CandD_I_k[k,t])), NA,
+    ifelse((is.na(GARCH11_CandD_I_k[k,t])), NA,
         (sum(GARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
 
 
