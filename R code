@@ -4,8 +4,6 @@
 ##### R code for Disertation 'Information Demand and Stock Return Predictability'
 ##### University of Essex
 ##### Written by: Jonathan Legrand
-##### Written to be ran on Univeristy ceres.essex.ac.uk
-##### This script version spans from 
 #####---------------------------------------------------------------------------
 print("R code Version 77 for Disertation 'Information Demand and Stock Return Predictability': University of Essex: Written by: Jonathan Legrand. Written to be ran on Univeristy ceres.essex.ac.uk")
 
@@ -84,7 +82,7 @@ print('Set Datasets')
 ###---------------------------------------------------------------------------
 
 
-SPX_Dates_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
+SPX_Dates_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
                           sheet = "Without_FRED_or_O-M_Holidays",
                           range = "A2:A3794",
                           col_names = "SPX_Dates")
@@ -101,32 +99,37 @@ SPX_Datesm2 = as.Date(SPX_Dates_df_m2$SPX_Dates,"%Y-%m-%d", tz="Europe/London")
 # fix(SPX_Dates)
 
 
-DGS1MO_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
+DGS1MO_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
                        sheet = "Without_FRED_or_O-M_Holidays",
                        range = "B2:B3794",
                        col_names = "DGS1MO")
+DGS1MO_df_dates = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/1-Month_Treasury_Rate/1-Month_Treasury_Constant_Maturity_Rate_FRED_id_DGS1MO_2004.01.01_to_2019.03.13.xlsx",
+                                     sheet = "Without_FRED_or_O-M_Holidays",
+                                     range = "A2:A3794",
+                                     col_names = "DGS1MO_Dates")
+DGS1MO_df_dates = as.Date(DGS1MO_df_dates$DGS1MO_Dates,"%Y-%m-%d", tz="Europe/London")
 DGS1MO = as.matrix(DGS1MO_df)
 
-DTB3_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/3-Month_Treasury_Bill/Daily_3-Month_Treasury_Bill_FRED_id_TB3MS_2004.01.01_to_2019.03.13.xlsx",
+DTB3_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/3-Month_Treasury_Bill/Daily_3-Month_Treasury_Bill_FRED_id_TB3MS_2004.01.01_to_2019.03.13.xlsx",
                      sheet = "Without_FRED_or_O-M_Holidays",
                      range = "B2:B3794",
                      col_names = "TB3MS")
 DTB3 = as.matrix(DTB3_df)
 
-DDGS10_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/10-Year_Treasury_Rate/10-Year_Treasury_Constant_Maturity_Rate_FRED_id_DGS10_2004.01.01_to_2019.03.13.xlsx",
+DDGS10_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/10-Year_Treasury_Rate/10-Year_Treasury_Constant_Maturity_Rate_FRED_id_DGS10_2004.01.01_to_2019.03.13.xlsx",
                        sheet = "Without_FRED_or_O-M_Holidays",
                        range = "B2:B3794",
                        col_names = "DGS10")
 DDGS10 = as.matrix(DDGS10_df)
 
-SPX_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+SPX_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
                     sheet = "SPX2004-2019.03.1WithoutFREDHol",
                     range = 'T2:T3794',
                     col_names = "SPX")
 SPX = as.matrix(SPX_df)
 
 
-SPX_RVar_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+SPX_RVar_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
                          sheet = "SPX2004-2019.03.1WithoutFREDHol",
                          range = "I2:I3794",
                          col_names = "SPX_RVar")
@@ -139,112 +142,6 @@ SPX_RV_zoo=zoo(SPX_RV, as.Date(SPX_Dates))
 
 
 
-##---------------------------------------------------------------------------
-## SVI1
-##---------------------------------------------------------------------------
-
-# The SVI Excel file tends to have empty values at its end.
-# The 'slice' function bellow will remove them.
-SPX_SVI_df = slice(read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_Only_Trading_Days.xlsx",
-                              sheet = "SVI_Without_O-M_Holidays",
-                              range = "B1:B3802",
-                              col_names = "SPX_SVI"),
-                   1:length(SPX_Dates))
-SPX_SVI = as.matrix(SPX_SVI_df) # Convert the data frame 'SPX_SVI_df' into a matrix
-
-# Construct Google's Search Vecrot Index (SVI).
-SPX_dSVI = as.matrix(slice(SPX_SVI_df - lag.xts(data.matrix(SPX_SVI)),
-                           2:length(SPX_SVI)))
-colnames(SPX_dSVI) = c('SPX_dSVI')
-
-
-##---------------------------------------------------------------------------
-## SVI2
-##---------------------------------------------------------------------------
-
-SPX_SVI2_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/2/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_all_days.xlsx",
-                         sheet = "Sheet1",
-                         range = "A2:B5552",
-                         col_names = c("SVI2_dates", "SPX_SVI2"))
-SPX_SVI2_zoo = zoo(SPX_SVI2_df[1:5551,2], as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
-SPX_SVI2 = as.matrix(SPX_SVI2_zoo)
-
-SPX_dSVI2_zoo = zoo(SPX_SVI2 - lag.xts(data.matrix(SPX_SVI2)),
-                    as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
-SPX_dSVI2_zoo = SPX_dSVI2_zoo - (SPX_R_zoo*0)
-colnames(SPX_dSVI2_zoo) = c('SPX_dSVI2')
-
-
-##---------------------------------------------------------------------------
-## SVI CVP
-##---------------------------------------------------------------------------
-
-SPX_SVICPV_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/CPV/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2018.02.06 _CPV_days.xlsx",
-                           sheet = "Sheet1",
-                           range = "A2:B4824",
-                           col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
-SPX_SVICPV_zoo = zoo(SPX_SVICPV_df[1:4824,2],
-                     as.Date(as.matrix(SPX_SVICPV_df[1:4824,1])))
-SPX_SVICPV = as.matrix(SPX_SVICPV_zoo)
-
-SPX_dSVICPV_all_days_zoo=zoo(SPX_SVICPV-lag.xts(data.matrix(SPX_SVICPV)),
-                             as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
-SPX_dSVICPV = SPX_dSVICPV_all_days_zoo - (SPX_R_zoo*0)
-colnames(SPX_dSVICPV) = c('SPX_dSVICPV')
-
-
-##---------------------------------------------------------------------------
-## SVI CVP US
-##---------------------------------------------------------------------------
-
-SPX_SVICPVUS_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/CPV_US/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2016.11.09_all_days.xlsx",
-                             sheet = "Sheet1",
-                             range = "A2:B4824",
-                             col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
-SPX_SVICPVUS_zoo = zoo(SPX_SVICPVUS_df[1:4823,2],
-                       as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
-SPX_SVICPVUS_matrix = as.matrix(SPX_SVICPVUS_zoo)
-
-
-SPX_dSVICPVUS_all_days_zoo=zoo(SPX_SVICPVUS_matrix-lag.xts(SPX_SVICPVUS_matrix),
-                               as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
-SPX_dSVICPVUS_R = SPX_dSVICPVUS_all_days_zoo-(SPX_R_zoo*0)
-colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_R')
-
-SPX_dSVICPVUS_Rm1 = lag(SPX_dSVICPVUS_all_days_zoo) - (SPX_R_zoo*0)
-colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_Rm1')
-
-
-
-#---------------------------------------------------------------------------
-# # SVI CPV MA
-#---------------------------------------------------------------------------
-
-# the dSVI data is quite noisy, so we use a Moving Average to smooth it out
-# SPX_MAdSVICPV_all_days_zoo=zoo(movavg(SPX_dSVICPV_all_days_zoo, M,type="s"),
-#                                         as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
-# SPX_MAdSVICPV_all_days_zoo=zoo(SPX_dSVICPV_all_days_zoo, as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
-# SPX_MAdSVICPV = na.omit(SPX_MAdSVICPV_all_days_zoo) - (SPX_R_zoo*0)
-
-
-
-# Deppending on the M chosen, the sample sie differs since we loose M starting
-# datapoints; so to insure we get comparable data throughout, we will only start
-# R and MAdSVI on 2004-01-07:
-# SPX_R_Sample_zoo = SPX_R_zoo[3:length(SPX_R_zoo)]
-# SPX_R_Sample_zoo = SPX_R_Sample_zoo - (SPX_MAdSVICPV*0)
-
-# SPX_MAdSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
-# SPX_dSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
-
-# SPX_Sample_Dates = as.Date(zoo::index(SPX_MAdSVICPV))
-# Note that when usinf MAdSVI, the sample would start M days after 2004-01-01;
-# the maximum we will allow M to be will be 6, such that it starts on
-# 2004-01-07 and ends on 2017-03-15.
-# Its last in-GARCH-training-sample value is 2004-12-31 and is its 245th value.
-# Its first out-of-GARCH-training-sample value is 2005-01-03 and is its 246th value.
-
-
 ###---------------------------------------------------------------------------
 ### FTSE
 ###---------------------------------------------------------------------------
@@ -252,13 +149,13 @@ print("Importing FTSE data")
 
 
 
-FTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+FTSE_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
                     sheet = "FTSE2001-2019.06.21",
                     range = 'U2:U4910',
                     col_names = "FTSE")
 FTSE_matrix = as.matrix(FTSE_df)
 
-FTSE_Dates = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+FTSE_Dates = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
                         sheet = "FTSE2001-2019.06.21",
                         range = 'A2:A4910',
                         col_names = "FTSE Dates")
@@ -276,7 +173,7 @@ FTSE_zoo = as.zoo(FTSE_matrix, as.Date(FTSE_Dates_matrix))
 # Note that: The prices of conventional gilts are quoted in terms of £100 nominal. As per: https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/
 print("Importing BoE data")
 
-BoE5YR_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/BoE_5_Year_Gilt/British_ Government_Securities_Yield_5_year_Nominal_Zero_Coupon.xlsx",
+BoE5YR_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/BoE_5_Year_Gilt/British_ Government_Securities_Yield_5_year_Nominal_Zero_Coupon.xlsx",
                      sheet = "British_ Government_Securities_",
                      range = 'A5:B3937',
                      col_names = c("BoE 5Y Yield Dates", "BoE 5Y Yield"))
@@ -285,7 +182,7 @@ BoE5YR_zoo = zoo(BoE5YR_matrix[1:3933,2], as.Date(BoE5YR_matrix[1:3933,1]))
 
 
 
-SVIFTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/SVI/FTSE 100 World/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2016.06.24_all_days.xlsx",
+SVIFTSE_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/SVI/FTSE 100 World/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2016.06.24_all_days.xlsx",
                         sheet = "Sheet1",
                         range = "A2:B5552",
                         col_names = c("SVIFTSE_dates", "SVIFTSE"))
@@ -294,7 +191,7 @@ SVIFTSE = as.matrix(SVIFTSE_zoo)
 
 
 
-RVarFTSE_df = read_excel("C:/Users/johnf/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
+RVarFTSE_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/Realised Volatility/5min_realised_volatility_from_Oxford-Man.xlsx",
                       sheet = "FTSE2001-2019.06.21",
                       range = 'J2:J4910',
                       col_names = "FTSE")
@@ -342,7 +239,8 @@ print("Derive variables")
 US_1MO_r_f=((((((DGS1MO/100)+1)^(-1/12))*1000)-
                ((((lag(DGS1MO)/100)+1)^(-1/12))*1000))/
               ((((lag(DGS1MO)/100)+1)^(-(1/12)))*1000))
-US_1MO_r_f_zoo = zoo(US_1MO_r_f, as.Date(SPX_Dates))
+US_1MO_r_f_zoo = zoo(US_1MO_r_f, as.Date(DGS1MO_df_dates))
+
 
 
 # Construct the returns variable, R_t (and its laged value, R_tm1)
@@ -364,6 +262,117 @@ SPX_R_matrix = as.matrix(((SPX_df-lag.xts(data.matrix(SPX_df)))
                           /lag.xts(data.matrix(SPX_df)))
                          -US_1MO_r_f)[2:length(SPX)]
 SPX_R_zoo = zoo(SPX_R_matrix,as.Date(SPX_Datesm1))
+
+
+
+##---------------------------------------------------------------------------
+## SVI1
+##---------------------------------------------------------------------------
+
+# The SVI Excel file tends to have empty values at its end.
+# The 'slice' function bellow will remove them.
+SPX_SVI_df = slice(read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/SVI/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_Only_Trading_Days.xlsx",
+                              sheet = "SVI_Without_O-M_Holidays",
+                              range = "A1:B3802",
+                              col_names = c("Dates", "SPX_SVI")),
+                   1:length(SPX_Dates))
+SPX_SVI = as.matrix(SPX_SVI_df$SPX_SVI) # Convert the data frame 'SPX_SVI_df' into a matrix
+SPX_SVI_zoo = zoo(SPX_SVI, as.Date(SPX_SVI_df$Dates,"%Y-%m-%d", tz="Europe/London"))
+
+# Construct Google's Search Vecrot Index (SVI).
+SPX_dSVI = as.matrix(SPX_SVI - lag.xts(data.matrix(SPX_SVI)))[2:length(SPX_SVI)]
+colnames(SPX_dSVI) = c('SPX_dSVI')
+
+SPX_dSVI_zoo = zoo(SPX_dSVI,
+                   as.Date(Dates[1:3792]))
+
+##---------------------------------------------------------------------------
+## SVI2
+##---------------------------------------------------------------------------
+
+SPX_SVI2_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/SVI/2/SVI_from_2004.01.01_to_2019.03.13_normalised_by_2018.02.06_all_days.xlsx",
+                         sheet = "Sheet1",
+                         range = "A2:B5552",
+                         col_names = c("SVI2_dates", "SPX_SVI2"))
+SPX_SVI2_zoo = zoo(SPX_SVI2_df[1:5551,2], as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
+SPX_SVI2 = as.matrix(SPX_SVI2_zoo)
+
+SPX_dSVI2_zoo = zoo(SPX_SVI2 - lag.xts(data.matrix(SPX_SVI2)),
+                    as.Date(as.matrix(SPX_SVI2_df[1:5551,1])))
+SPX_dSVI2_zoo = SPX_dSVI2_zoo - (SPX_R_zoo*0)
+colnames(SPX_dSVI2_zoo) = c('SPX_dSVI2')
+
+
+##---------------------------------------------------------------------------
+## SVI CVP
+##---------------------------------------------------------------------------
+
+SPX_SVICPV_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/SVI/CPV/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2018.02.06 _CPV_days.xlsx",
+                           sheet = "Sheet1",
+                           range = "A2:B4824",
+                           col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
+SPX_SVICPV_zoo = zoo(SPX_SVICPV_df[1:4823,2],
+                     as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+SPX_SVICPV = as.matrix(SPX_SVICPV_zoo)
+
+SPX_dSVICPV_all_days_zoo=zoo(SPX_SVICPV-lag.xts(data.matrix(SPX_SVICPV)),
+                             as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+SPX_dSVICPV = SPX_dSVICPV_all_days_zoo - (SPX_R_zoo*0)
+colnames(SPX_dSVICPV) = c('SPX_dSVICPV')
+
+
+##---------------------------------------------------------------------------
+## SVI CVP US
+##---------------------------------------------------------------------------
+
+SPX_SVICPVUS_df = read_excel("C:/Users/johnukfr/OneDrive/UoE/Disertation/Data/SVI/CPV_US/SVI_from_2004.01.01_to_2017.03.15_normalised_by_2016.11.09_all_days.xlsx",
+                             sheet = "Sheet1",
+                             range = "A2:B4824",
+                             col_names = c("SPX_SVICPV_dates", "SPX_SVICPV"))
+SPX_SVICPVUS_zoo = zoo(SPX_SVICPVUS_df[1:4823,2],
+                       as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
+SPX_SVICPVUS_matrix = as.matrix(SPX_SVICPVUS_zoo)
+
+
+SPX_dSVICPVUS_all_days_zoo=zoo(SPX_SVICPVUS_matrix-lag.xts(SPX_SVICPVUS_matrix),
+                               as.Date(as.matrix(SPX_SVICPVUS_df[1:4823,1])))
+SPX_dSVICPVUS_R = SPX_dSVICPVUS_all_days_zoo-(SPX_R_zoo*0)
+colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_R')
+
+SPX_dSVICPVUS_Rm1 = lag(SPX_dSVICPVUS_all_days_zoo) - (SPX_R_zoo*0)
+colnames(SPX_dSVICPVUS_R) = c('SPX_dSVICPVUS_Rm1')
+
+
+
+#---------------------------------------------------------------------------
+# # SVI CPV MA
+#---------------------------------------------------------------------------
+
+# the dSVI data is quite noisy, so we use a Moving Average to smooth it out
+# SPX_MAdSVICPV_all_days_zoo=zoo(movavg(SPX_dSVICPV_all_days_zoo, M,type="s"),
+#                                         as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+# SPX_MAdSVICPV_all_days_zoo=zoo(SPX_dSVICPV_all_days_zoo, as.Date(as.matrix(SPX_SVICPV_df[1:4823,1])))
+# SPX_MAdSVICPV = na.omit(SPX_MAdSVICPV_all_days_zoo) - (SPX_R_zoo*0)
+
+
+
+# Deppending on the M chosen, the sample sie differs since we loose M starting
+# datapoints; so to insure we get comparable data throughout, we will only start
+# R and MAdSVI on 2004-01-07:
+# SPX_R_Sample_zoo = SPX_R_zoo[3:length(SPX_R_zoo)]
+# SPX_R_Sample_zoo = SPX_R_Sample_zoo - (SPX_MAdSVICPV*0)
+
+# SPX_MAdSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
+# SPX_dSVICPV = SPX_MAdSVICPV - (SPX_R_Sample_zoo*0)
+
+# SPX_Sample_Dates = as.Date(zoo::index(SPX_MAdSVICPV))
+# Note that when usinf MAdSVI, the sample would start M days after 2004-01-01;
+# the maximum we will allow M to be will be 6, such that it starts on
+# 2004-01-07 and ends on 2017-03-15.
+# Its last in-GARCH-training-sample value is 2004-12-31 and is its 245th value.
+# Its first out-of-GARCH-training-sample value is 2005-01-03 and is its 246th value.
+
+
 
 
 
@@ -447,6 +456,47 @@ acf(matrix(FTSE_R_zoo), lag.max = 1, plot = FALSE)
 
 
 
+
+
+
+# FTSE's SVI
+
+print("Mean of SVIFTSE_zoo")
+mean(SVIFTSE_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
+
+print("Standard Deviation of SVIFTSE_zoo")
+sd(SVIFTSE_zoo)
+
+print("Median of SVIFTSE_zoo")
+median(SVIFTSE_zoo)
+
+print("Skewness of SVIFTSE_zoo")
+skewness(as.numeric(SVIFTSE_zoo))
+
+print("Kurtosis of SVIFTSE_zoo")
+kurtosis(as.numeric(SVIFTSE_zoo))
+
+print("AutoCorrelation Function of SVIFTSE_zoo")
+acf(as.numeric(SVIFTSE_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SVIFTSE_zoo")
+adf.test(matrix(SVIFTSE_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SVIFTSE_zoo, xlab='Date', ylab='SVICPVUSSPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SVIFTSE_zoo")
+PP.test(SVIFTSE_zoo)
+
+print("KPSS Test of SVIFTSE_zoo")
+kpss.test(matrix(SVIFTSE_zoo))
+
+
+
+
+
 # FTSE's dSVI
 
 print("Mean of dSVIFTSE")
@@ -470,7 +520,7 @@ acf(matrix(dSVIFTSE_zoo), lag.max = 1, plot = FALSE)
 print("Augmented Dickey-Fuller Test of dSVIFTSE")
 adf.test(matrix(dSVIFTSE_zoo), nlag = NULL, output = TRUE)
 # Our ADF test here should show that we reject the Null Hypothesis (low p-value)
-# in preferance for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
 # is stationary by ploting it with:
 plot(dSVIFTSE_zoo, xlab='Date', ylab='dSVIFTSE', col='black',
       main='dSVIFTSE', type='l')
@@ -627,23 +677,111 @@ acf(as.numeric(US_1MO_r_f[2:length(US_1MO_r_f)]), lag.max = 1, plot = FALSE)
 
 # SPX's SVI1
 
-print("Mean of SPX_SVI")
-mean(SPX_SVI)
+print("Mean of SPX_SVI_zoo")
+mean(SPX_SVI_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
 
-print("Standard Deviation of SPX_SVI")
-sd(SPX_SVI)
+print("Standard Deviation of SPX_SVI_zoo")
+sd(SPX_SVI_zoo)
 
-print("Median of SPX_SVI")
-median(SPX_SVI)
+print("Median of SPX_SVI_zoo")
+median(SPX_SVI_zoo)
 
-print("Skewness of SPX_SVI")
-skewness(as.numeric(SPX_SVI))
+print("Skewness of SPX_SVI_zoo")
+skewness(as.numeric(SPX_SVI_zoo))
 
-print("Kurtosis of SPX_SVI")
-kurtosis(as.numeric(SPX_SVI))
+print("Kurtosis of SPX_SVI_zoo")
+kurtosis(as.numeric(SPX_SVI_zoo))
 
-print("AutoCorrelation Function of SPX_SVI")
-acf(as.numeric(SPX_SVI), lag.max = 1, plot = FALSE)
+print("AutoCorrelation Function of SPX_SVI_zoo")
+acf(as.numeric(SPX_SVI_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SPX_SVI_zoo")
+adf.test(matrix(SPX_SVI_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SPX_SVI_zoo, xlab='Date', ylab='SVI1SPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_SVI_zoo")
+PP.test(SPX_SVI_zoo)
+
+print("KPSS Test of SPX_SVI_zoo_zoo")
+kpss.test(matrix(SPX_SVI_zoo))
+
+
+
+# SPX's dSVI1
+
+print("Mean of SPX_dSVI")
+mean(SPX_dSVI_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
+
+print("Standard Deviation of SPX_dSVI")
+sd(SPX_dSVI)
+
+print("Median of SPX_dSVI")
+median(SPX_dSVI)
+
+print("Skewness of SPX_dSVI")
+skewness(as.numeric(SPX_dSVI))
+
+print("Kurtosis of SPX_dSVI")
+kurtosis(as.numeric(SPX_dSVI))
+
+print("AutoCorrelation Function of SPX_dSVI")
+acf(as.numeric(SPX_dSVI), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SPX_dSVI")
+adf.test(matrix(SPX_dSVI), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SPX_dSVI_zoo, xlab='Date', ylab='dSVI1SPX', col='black', type='l',
+     # main='dSVIFTSE'
+     )
+print("PP Test of SPX_dSVI")
+PP.test(SPX_dSVI)
+
+print("KPSS Test of SPX_dSVI_zoo")
+kpss.test(matrix(SPX_dSVI_zoo))
+
+
+
+
+
+# SPX's SVI2
+
+print("Mean of SPX_SVI2_zoo")
+mean(SPX_SVI2_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
+
+print("Standard Deviation of SPX_SVI2_zoo")
+sd(SPX_SVI2_zoo)
+
+print("Median of SPX_SVI2_zoo")
+median(SPX_SVI2_zoo)
+
+print("Skewness of SPX_SVI2_zoo")
+skewness(as.numeric(SPX_SVI2_zoo))
+
+print("Kurtosis of SPX_SVI2_zoo")
+kurtosis(as.numeric(SPX_SVI2_zoo))
+
+print("AutoCorrelation Function of SPX_SVI2_zoo")
+acf(as.numeric(SPX_SVI2_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SPX_SVI2_zoo")
+adf.test(matrix(SPX_SVI2_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SPX_SVI2_zoo, xlab='Date', ylab='SVI2SPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_SVI2_zoo")
+PP.test(SPX_SVI2_zoo)
+
+print("KPSS Test of SPX_SVI2_zoo")
+kpss.test(matrix(SPX_SVI2_zoo))
 
 
 
@@ -668,11 +806,64 @@ kurtosis(as.numeric(SPX_dSVI2_zoo))
 print("AutoCorrelation Function of SPX_dSVI2")
 acf(as.numeric(SPX_dSVI2_zoo), lag.max = 1, plot = FALSE)
 
+print("Augmented Dickey-Fuller Test of SPX_dSVI2_zoo")
+adf.test(matrix(SPX_dSVI2_zoo), nlag = NULL, output = TRUE)
+plot(SPX_dSVI2_zoo, xlab='Date', ylab='dSVI2SPX', col='black', type='l',
+     # main='dSVIFTSE'
+     )
+print("PP Test of SPX_dSVI2_zoo")
+PP.test(SPX_dSVI2_zoo)
+
+print("KPSS Test of SPX_dSVI2_zoo")
+kpss.test(matrix(SPX_dSVI2_zoo))
 
 
 
 
-# SPX's SPX_SVICPV
+
+
+# SPX's SVICPV
+
+print("Mean of SPX_SVICPV_zoo")
+mean(SPX_SVICPV_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
+
+print("Standard Deviation of SPX_SVICPV_zoo")
+sd(SPX_SVICPV_zoo)
+
+print("Median of SPX_SVICPV_zoo")
+median(SPX_SVICPV_zoo)
+
+print("Skewness of SPX_SVICPV_zoo")
+skewness(as.numeric(SPX_SVICPV_zoo))
+
+print("Kurtosis of SPX_SVICPV_zoo")
+kurtosis(as.numeric(SPX_SVICPV_zoo))
+
+print("AutoCorrelation Function of SPX_SVICPV_zoo")
+acf(as.numeric(SPX_SVICPV_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SPX_SVICPV_zoo")
+adf.test(matrix(SPX_SVICPV_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SPX_SVICPV_zoo, xlab='Date', ylab='SVICPVSPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_SVICPV_zoo")
+PP.test(SPX_SVICPV_zoo)
+
+print("KPSS Test of SPX_SVICPV_zoo")
+kpss.test(matrix(SPX_SVICPV_zoo))
+
+
+
+
+
+
+
+
+# SPX's SPX_dSVICPV
 
 print("Mean of SPX_SVICPV")
 mean(SPX_dSVICPV)
@@ -692,6 +883,56 @@ kurtosis(as.numeric(SPX_dSVICPV))
 print("AutoCorrelation Function of SPX_SVICPV")
 acf(as.numeric(SPX_dSVICPV), lag.max = 1, plot = FALSE)
 
+print("Augmented Dickey-Fuller Test of SPX_dSVICPV")
+adf.test(matrix(SPX_dSVICPV), nlag = NULL, output = TRUE)
+plot(SPX_dSVICPV, xlab='Date', ylab='dSVICPVSPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_dSVICPV")
+PP.test(SPX_dSVICPV)
+
+print("KPSS Test of SPX_dSVICPV")
+kpss.test(matrix(SPX_dSVICPV))
+
+
+
+
+
+
+
+# SPX's SVICPVUS
+
+print("Mean of SPX_SVICPVUS_zoo")
+mean(SPX_SVICPVUS_zoo) # Note that that's the same as 'mean(SPX_dSVI_zoo)'; after much study on the matter, it seems as though this mean and other statistics are correct, which only highlights how different seperate SVI draws can be.
+
+print("Standard Deviation of SPX_SVICPVUS_zoo")
+sd(SPX_SVICPVUS_zoo)
+
+print("Median of SPX_SVICPVUS_zoo")
+median(SPX_SVICPVUS_zoo)
+
+print("Skewness of SPX_SVICPVUS_zoo")
+skewness(as.numeric(SPX_SVICPVUS_zoo))
+
+print("Kurtosis of SPX_SVICPVUS_zoo")
+kurtosis(as.numeric(SPX_SVICPVUS_zoo))
+
+print("AutoCorrelation Function of SPX_SVICPVUS_zoo")
+acf(as.numeric(SPX_SVICPVUS_zoo), lag.max = 1, plot = FALSE)
+
+print("Augmented Dickey-Fuller Test of SPX_SVICPVUS_zoo")
+adf.test(matrix(SPX_SVICPVUS_zoo), nlag = NULL, output = TRUE)
+# Our ADF test here should show that we reject the Null Hypothesis (low p-value)
+# in preference for the alternative of stationarity. One can see that dSVIFTSE_zoo
+# is stationary by ploting it with:
+plot(SPX_SVICPVUS_zoo, xlab='Date', ylab='SVICPVUSSPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_SVICPVUS_zoo")
+PP.test(SPX_SVICPVUS_zoo)
+
+print("KPSS Test of SPX_SVICPVUS_zoo")
+kpss.test(matrix(SPX_SVICPVUS_zoo))
 
 
 
@@ -717,6 +958,18 @@ kurtosis(as.numeric(SPX_dSVICPVUS_R))
 print("AutoCorrelation Function of SPX_dSVICPVUS_R")
 acf(as.numeric(SPX_dSVICPVUS_R), lag.max = 1, plot = FALSE)
 
+print("Augmented Dickey-Fuller Test of SPX_dSVICPVUS_R")
+adf.test(matrix(SPX_dSVICPVUS_R), nlag = NULL, output = TRUE)
+
+plot(SPX_dSVICPVUS_R, xlab='Date', ylab='dSVICPVUSSPX', col='black', type='l',
+     # main='dSVIFTSE'
+)
+print("PP Test of SPX_dSVICPVUS_R")
+PP.test(SPX_dSVICPVUS_R)
+
+print("KPSS Test of SPX_dSVICPVUS_R")
+kpss.test(matrix(SPX_dSVICPVUS_R))
+
 
 
 
@@ -725,17 +978,21 @@ acf(as.numeric(SPX_dSVICPVUS_R), lag.max = 1, plot = FALSE)
 
 
 # Descriptive Plot
-plot(SPX_SVI, xlab='Time Period', ylab='SVIFTSE', col='blue',
-     main='Google Search Vector Index 1 (SVI 1) for the SPX index over time', type='l')
+plot(SPX_SVI_zoo, xlab='Date', ylab='SVISPX1', col='blue', type='l',
+     # main='Google Search Vector Index 1 (SVI 1) for the SPX index over time'
+     )
 
-plot(SPX_SVI2_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
-     main='Google Search Vector Index 2 (SVI 2) for the SPX index over time', type='l')
+plot(SPX_SVI2_zoo, xlab='Date', ylab='SVISPX2', col='blue',
+     # main='Google Search Vector Index 2 (SVI 2) for the SPX index over time', type='l'
+     )
 
-plot(SPX_SVICPV_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
-     main='Google Search Vector Index CPV (SVI-CPV) for the SPX index over time', type='l')
+plot(SPX_SVICPV_zoo, xlab='Date', ylab='SVISPXCPV', col='blue',
+     # main='Google Search Vector Index CPV (SVI-CPV) for the SPX index over time', type='l'
+     )
 
-plot(SPX_SVICPVUS_zoo, xlab='Date', ylab='SVIFTSE', col='blue',
-     main='Google Search Vector Index CPV-US (SVI-CPV-US) for the SPX index over time', type='l')
+plot(SPX_SVICPVUS_zoo, xlab='Date', ylab='SVICPVUS', col='blue',
+     # main='Google Search Vector Index CPV-US (SVI-CPV-US) for the SPX index over time', type='l'
+     )
 
 
 
@@ -2025,7 +2282,7 @@ lines(zoo(R_cumulated,
 
 
 
-save.image("C:/Users/johnf/OneDrive/UoE/Disertation/Maths/IDaSRP_077.RData")
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.RData")
 
 
 # sink()
