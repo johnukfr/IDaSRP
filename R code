@@ -1423,7 +1423,7 @@ dm.test(matrix(EGARCH11forecasterror_dm), matrix(EGARCH11SVIforecasterror_dm), a
 
 
 ###----------------------------------------------------------------------------
-### C&D, Naive and DynProbit Models
+### C&D, Naive
 ###----------------------------------------------------------------------------
 
 
@@ -2304,6 +2304,105 @@ lines(zoo(R_Active_Naive_p_cumulated,
 
 
 
+##----------------------------------------------------------------------------
+## 3D graph Low Resolution
+##----------------------------------------------------------------------------
+
+# Set the probability above which we would like our investing algorythm to invest in our 3d grath
+sequance = seq(from = 0, to = 1, by = 0.05)
+
+
+R_Active_GJRGARCH11_p = matrix(, nrow=3585, ncol=length(sequance))
+R_Active_GJRGARCH11_p_cumulated = matrix(, nrow=3585, ncol=length(sequance))
+R_cumulated = matrix(, nrow=3585, ncol=length(sequance))
+
+y_d_GJRGARCH11 = y_d - (GJRGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11's.
+
+# Set eh probability above which we would like our investing algorythm to invest
+for(P in sequance)
+{P_number = 1 + P*(length(sequance)-1)
+
+# corresponding directional forecast and realised direction
+y_hat_d_GJRGARCH11 = ifelse(GJRGARCH11_CandD_zoo_no_nas>P,1,0)
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GJRGARCH11),1))==1 , 1, 0)
+
+R_Active_GJRGARCH11_p_col_zoo = ((lag(omega,1) * ((FTSE_R_zoo-(y_hat_d_GJRGARCH11*0))+(BoE_r_f_zoo-(y_hat_d_GJRGARCH11*0))) + (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GJRGARCH11*0))))[2:length(y_hat_d_GJRGARCH11)] # note that the trick '(FTSE_R_zoo-(y_hat_d_GJRGARCH11*0))' returns only the R values corresponding to dates present in y_hat_d_GJRGARCH11, which are the ones in omega (omega couldn't be used because it's not a zoo object)
+R_Active_GJRGARCH11_p[,P_number] = R_Active_GJRGARCH11_p_col_zoo
+
+for (i in c(1:length(R_Active_GJRGARCH11_p[,P_number])))
+{R_Active_GJRGARCH11_p_cumulated[i,P_number] = prod((1+R_Active_GJRGARCH11_p[,P_number])[1:i])
+R_cumulated[i,P_number] = prod((1+(FTSE_R_zoo-(R_Active_GJRGARCH11_p_col_zoo*0)))[1:i])}
+}
+
+GJRGARCH11_CandD_3D_LowRes = (plot_ly(z=R_Active_GJRGARCH11_p_cumulated, type="scatter3d") %>%
+                                    layout(
+                                       title = "Portfolio Investing £1 as per the Active C&D Model Using GJRGARCH11 models",
+                                       scene = list(
+                                          xaxis = list(title = "Investment Threashold"),
+                                          yaxis = list(title = "Date"),
+                                          zaxis = list(title = "Portfolio Return")
+                                       )) %>%
+                                    add_surface())
+# chart_link = api_create(GJRGARCH11_CandD_3D, filename = "GJRGARCH11_CandD_3D-public-graph")
+
+
+
+##----------------------------------------------------------------------------
+## 3D graph High Resolution
+##----------------------------------------------------------------------------
+
+# Set the probability above which we would like our investing algorythm to invest in our 3d grath
+BY = 0.0125
+FROM = 0.45
+sequance = seq(from = FROM, to = 0.6, by = BY)
+
+
+R_Active_GJRGARCH11_p = matrix(, nrow=3585, ncol=length(sequance))
+R_Active_GJRGARCH11_p_cumulated = matrix(, nrow=3585, ncol=length(sequance))
+R_cumulated = matrix(, nrow=3585, ncol=length(sequance))
+
+y_d_GJRGARCH11 = y_d - (GJRGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11's.
+
+# Set eh probability above which we would like our investing algorythm to invest
+for(P in sequance)
+{P_number = 1 + P*(1/BY) - FROM/BY
+
+# corresponding directional forecast and realised direction
+y_hat_d_GJRGARCH11 = ifelse(GJRGARCH11_CandD_zoo_no_nas>P,1,0)
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_GJRGARCH11),1))==1 , 1, 0)
+
+R_Active_GJRGARCH11_p_col_zoo = ((lag(omega,1) * ((FTSE_R_zoo-(y_hat_d_GJRGARCH11*0))+ (BoE_r_f_zoo-(y_hat_d_GJRGARCH11*0))) + (1-lag(omega,1)) * (BoE_r_f_zoo-(y_hat_d_GJRGARCH11*0))))[2:length(y_hat_d_GJRGARCH11)] # note that the trick '(FTSE_R_zoo-(y_hat_d_GJRGARCH11*0))' returns only the R values corresponding to dates present in y_hat_d_GJRGARCH11, which are the ones in omega (omega couldn't be used because it's not a zoo object)
+R_Active_GJRGARCH11_p[,P_number] = R_Active_GJRGARCH11_p_col_zoo
+
+for (i in c(1:length(R_Active_GJRGARCH11_p[,P_number])))
+{R_Active_GJRGARCH11_p_cumulated[i,P_number] = prod((1+R_Active_GJRGARCH11_p[,P_number])[1:i])
+R_cumulated[i,P_number] = prod((1+(FTSE_R_zoo-(R_Active_GJRGARCH11_p_col_zoo*0)))[1:i])}
+}
+
+GJRGARCH11_CandD_3D_HighRes = (plot_ly(z=R_Active_GJRGARCH11_p_cumulated, type="scatter3d") %>%
+                                     layout(
+                                        title = "Portfolio Investing £1 as per the Active C&D Model Using GJRGARCH11 models where 0.45<=P<=0.6",
+                                        scene = list(
+                                           xaxis = list(title = "Investment Threashold"),
+                                           yaxis = list(title = "Date"),
+                                           zaxis = list(title = "Portfolio Return")
+                                        )) %>%
+                                     add_surface())
+# chart_link = api_create(GJRGARCH11_CandD_3D, filename = "GJRGARCH11_CandD_3D-public-graph")
+
+
+
+
+
+
+
+
+
+
 ###----------------------------------------------------------------------------
 ### Granger and Pesaran (2000)'s framework using the GJRGARCH11SVI model (p=0.506 seems best)
 ###----------------------------------------------------------------------------
@@ -2779,16 +2878,6 @@ legend(lty=1, cex=1,
 
 
 
-
-
-
-
-
-
-
-
-
-
 ####---------------------------------------------------------------------------
 #### SPX1 GARCH models: create, train/fit them and create forecasts
 ####---------------------------------------------------------------------------
@@ -2803,13 +2892,398 @@ SPX1_roll = length(SPX_dSVI_zoo)-247
 # the first value after 247.
 
 
+
 ###----------------------------------------------------------------------------
-### SPX1 In-sample AR(1)-GARCH(1,1) Model
+### SPX1 In-sample SPX1_AR(1)-GARCH(1,1) Model
 ###---------------------------------------------------------------------------
 
 SPX1_in_sample_GARCH11 = GARCH_model_spec(mod="sGARCH", exreg= NULL)
 SPX1_in_sample_GARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
-                                 spec=in_sample_GARCH11)
+                                 spec=SPX1_in_sample_GARCH11)
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-GARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPX1_GARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                     as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_GARCH11_mu_hat) = c('SPX1_GARCH11_mu_hat')
+SPX1_GARCH11_sigma_hat_test = zoo(matrix(, nrow=roll, ncol=1),
+                        as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_GARCH11 = GARCH_model_spec(mod="sGARCH", exreg=NULL)
+try(withTimeout({(SPX1_GARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_GARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPX1_GARCH11fitforecast = GARCH_model_forecast(mod=SPX1_GARCH11fit)), silent = TRUE)
+    # suppressWarnings(expr)
+
+try((SPX1_GARCH11_mu_hat[i]=SPX1_GARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_GARCH11_sigma_hat[i]=SPX1_GARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_GARCH11)
+rm(SPX1_GARCH11fit)
+rm(SPX1_GARCH11fitforecast)
+}
+# fitted(GARCH11fitforecast)
+
+
+SPX_RV_no_SPX1_GARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_GARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+# This above is just a neat trick that returns strictly the RV values corresponding to the dates for which GARCH11_sigma_hat values are not NA without any new functions or packages.
+
+
+# Forecast Error, Mean and S.D.:
+SPX1_GARCH11forecasterror = (na.omit(SPX1_GARCH11_sigma_hat)
+                        -SPX_RV_no_SPX1_GARCH11_sigma_hat_na_dated)
+colnames(SPX1_GARCH11forecasterror) = c("SPX1_GARCH11forecasterror")
+# plot(zoo(GARCH11forecasterror, as.Date(row.names(GARCH11forecasterror))), type='l', ylab='GARCH11forecasterror', xlab='Date')
+
+mean(SPX1_GARCH11forecasterror)
+sd(SPX1_GARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_GARCH11_sigma_hat_na_dated, (na.omit(SPX1_GARCH11_sigma_hat)))
+
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 In-sample SPX1_AR(1)-GARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPX1_in_sample_GARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
+SPX1_in_sample_GARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                      spec=SPX1_in_sample_GARCH11SVI)
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-GARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPX1_GARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_GARCH11SVI_mu_hat) = c('SPX1_GARCH11_mu_hat')
+SPX1_GARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_GARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg=as.matrix(SPX_dSVI_zoo[1:(246+i)]))
+try(withTimeout({(SPX1_GARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_GARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPX1_GARCH11SVIfitforecast = GARCH_model_forecast(mod=SPX1_GARCH11SVIfit)), silent = TRUE)
+
+try((SPX1_GARCH11SVI_mu_hat[i]=SPX1_GARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_GARCH11SVI_sigma_hat[i]=SPX1_GARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_GARCH11SVI)
+rm(SPX1_GARCH11SVIfit)
+rm(SPX1_GARCH11SVIfitforecast)
+}
+# fitted(GARCH11SVIfitforecast)
+
+
+SPX_RV_no_SPX1_GARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_GARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPX1_GARCH11SVIforecasterror = (na.omit(SPX1_GARCH11SVI_sigma_hat)
+                             -SPX_RV_no_SPX1_GARCH11SVI_sigma_hat_na_dated)
+colnames(SPX1_GARCH11SVIforecasterror) = c("SPX1_GARCH11SVIforecasterror")
+# plot(zoo(GARCH11SVIforecasterror, as.Date(row.names(GARCH11SVIforecasterror))), type='l', ylab='GARCH11SVIforecasterror', xlab='Date')
+
+mean(SPX1_GARCH11SVIforecasterror)
+sd(SPX1_GARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_GARCH11SVI_sigma_hat_na_dated, (na.omit(SPX1_GARCH11SVI_sigma_hat)))
+# Note that this is the same as the bellow:
+# sqrt(mean((RV[(249+1):(length(R_vector)+1)] - as.matrix((GARCH11SVIfitforecast@forecast[["sigmaFor"]]))[1:SPX1_roll])^2))
+
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 In-sample SPX1_AR(1)-GJRGARCH(1,1) Model
+###---------------------------------------------------------------------------
+
+SPX1_in_sample_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg= NULL)
+SPX1_in_sample_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                      spec=in_sample_GJRGARCH11)
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-GJRGARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPX1_GJRGARCH11_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1),
+                          as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_GJRGARCH11_mu_hat) = c('SPX1_GJRGARCH11_mu_hat')
+SPX1_GJRGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1),
+                             as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg=NULL)
+try(withTimeout({(SPX1_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_GJRGARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPX1_GJRGARCH11fitforecast = GARCH_model_forecast(mod=SPX1_GJRGARCH11fit)), silent = TRUE)
+# suppressWarnings(expr)
+
+try((SPX1_GJRGARCH11_mu_hat[i]=SPX1_GJRGARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_GJRGARCH11_sigma_hat[i]=SPX1_GJRGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_GJRGARCH11)
+rm(SPX1_GJRGARCH11fit)
+rm(SPX1_GJRGARCH11fitforecast)
+}
+# fitted(GJRGARCH11fitforecast)
+
+
+SPX_RV_no_SPX1_GJRGARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_GJRGARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPX1_GJRGARCH11forecasterror = (na.omit(SPX1_GJRGARCH11_sigma_hat)
+                             -SPX_RV_no_SPX1_GJRGARCH11_sigma_hat_na_dated)
+colnames(SPX1_GJRGARCH11forecasterror) = c("SPX1_GJRGARCH11forecasterror")
+# plot(zoo(GJRGARCH11forecasterror, as.Date(row.names(GJRGARCH11forecasterror))), type='l', ylab='GJRGARCH11forecasterror', xlab='Date')
+
+mean(SPX1_GJRGARCH11forecasterror)
+sd(SPX1_GJRGARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_GJRGARCH11_sigma_hat_na_dated, (na.omit(SPX1_GJRGARCH11_sigma_hat)))
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 In-sample SPX1_AR(1)-GJRGARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPX1_in_sample_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
+SPX1_in_sample_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                         spec=in_sample_GJRGARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-GJRGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPX1_GJRGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_GJRGARCH11SVI_mu_hat) = c('SPX1_GJRGARCH11_mu_hat')
+SPX1_GJRGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg=as.matrix(SPX_dSVI_zoo[1:(246+i)]))
+try(withTimeout({(SPX1_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_GJRGARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPX1_GJRGARCH11SVIfitforecast = GARCH_model_forecast(mod=SPX1_GJRGARCH11SVIfit)), silent = TRUE)
+
+try((SPX1_GJRGARCH11SVI_mu_hat[i]=SPX1_GJRGARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_GJRGARCH11SVI_sigma_hat[i]=SPX1_GJRGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_GJRGARCH11SVI)
+rm(SPX1_GJRGARCH11SVIfit)
+rm(SPX1_GJRGARCH11SVIfitforecast)
+}
+# fitted(GJRGARCH11SVIfitforecast)
+
+
+SPX_RV_no_SPX1_GJRGARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_GJRGARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPX1_GJRGARCH11SVIforecasterror = (na.omit(SPX1_GJRGARCH11SVI_sigma_hat)
+                                -SPX_RV_no_SPX1_GJRGARCH11SVI_sigma_hat_na_dated)
+colnames(SPX1_GJRGARCH11SVIforecasterror) = c("SPX1_GJRGARCH11SVIforecasterror")
+# plot(zoo(GJRGARCH11SVIforecasterror, as.Date(row.names(GJRGARCH11SVIforecasterror))), type='l', ylab='GJRGARCH11SVIforecasterror', xlab='Date')
+
+mean(SPX1_GJRGARCH11SVIforecasterror)
+sd(SPX1_GJRGARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_GJRGARCH11SVI_sigma_hat_na_dated, (na.omit(SPX1_GJRGARCH11SVI_sigma_hat)))
+
+
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 In-sample SPX1_AR(1)-EGARCH(1,1) Model
+###---------------------------------------------------------------------------
+
+SPX1_in_sample_EGARCH11 = GARCH_model_spec(mod="eGARCH", exreg= NULL)
+SPX1_in_sample_EGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                      spec=SPX1_in_sample_EGARCH11)
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-EGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPX1_EGARCH11_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1),
+                          as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_EGARCH11_mu_hat) = c('SPX1_EGARCH11_mu_hat')
+SPX1_EGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1),
+                             as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_EGARCH11 = GARCH_model_spec(mod="eGARCH", exreg=NULL)
+try(withTimeout({(SPX1_EGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_EGARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPX1_EGARCH11fitforecast = GARCH_model_forecast(mod=SPX1_EGARCH11fit)), silent = TRUE)
+# suppressWarnings(expr)
+
+try((SPX1_EGARCH11_mu_hat[i]=SPX1_EGARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_EGARCH11_sigma_hat[i]=SPX1_EGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_EGARCH11)
+rm(SPX1_EGARCH11fit)
+rm(SPX1_EGARCH11fitforecast)
+}
+# fitted(EGARCH11fitforecast)
+
+
+SPX_RV_no_SPX1_EGARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_EGARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPX1_EGARCH11forecasterror = (na.omit(SPX1_EGARCH11_sigma_hat)
+                             -SPX_RV_no_SPX1_EGARCH11_sigma_hat_na_dated)
+colnames(SPX1_EGARCH11forecasterror) = c("SPX1_EGARCH11forecasterror")
+# plot(zoo(EGARCH11forecasterror, as.Date(row.names(EGARCH11forecasterror))), type='l', ylab='EGARCH11forecasterror', xlab='Date')
+
+mean(SPX1_EGARCH11forecasterror)
+sd(SPX1_EGARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_EGARCH11_sigma_hat_na_dated, (na.omit(SPX1_EGARCH11_sigma_hat)))
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 In-sample SPX1_AR(1)-EGARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPX1_in_sample_EGARCH11SVIfit = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
+SPX1_in_sample_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                         spec=SPX1_in_sample_EGARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the SPX1_AR(1)-GARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+SPX1_EGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(SPX1_EGARCH11SVI_mu_hat) = c('SPX1_EGARCH11_mu_hat')
+SPX1_EGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
+
+for (i in c(1:SPX1_roll))
+{SPX1_EGARCH11SVI = GARCH_model_spec(mod="eGARCH", exreg=as.matrix(SPX_dSVI_zoo[1:(246+i)]))
+try(withTimeout({(SPX1_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPX1_EGARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPX1_EGARCH11SVIfitforecast = GARCH_model_forecast(mod=SPX1_EGARCH11SVIfit)), silent = TRUE)
+
+try((SPX1_EGARCH11SVI_mu_hat[i]=SPX1_EGARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPX1_EGARCH11SVI_sigma_hat[i]=SPX1_EGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPX1_EGARCH11SVI)
+rm(SPX1_EGARCH11SVIfit)
+rm(SPX1_EGARCH11SVIfitforecast)
+}
+
+
+SPX_RV_no_SPX1_EGARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPX1_roll)], as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))
+    -(na.omit(zoo((SPX1_EGARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPX1_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPX1_EGARCH11SVIforecasterror = (na.omit(SPX1_EGARCH11SVI_sigma_hat)
+                                -SPX_RV_no_SPX1_EGARCH11SVI_sigma_hat_na_dated)
+colnames(SPX1_EGARCH11SVIforecasterror) = c("SPX1_EGARCH11SVIforecasterror")
+# plot(zoo(EGARCH11SVIforecasterror, as.Date(row.names(EGARCH11SVIforecasterror))), type='l', ylab='EGARCH11SVIforecasterror', xlab='Date')
+
+mean(SPX1_EGARCH11SVIforecasterror)
+sd(SPX1_EGARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPX1_EGARCH11SVI_sigma_hat_na_dated, (na.omit(SPX1_EGARCH11SVI_sigma_hat)))
+
+
+
+
+
+
+
+###---------------------------------------------------------------------------
+### s.d. forecase D-M tests
+###---------------------------------------------------------------------------
+
+print("This function implements the modified test proposed by Harvey, Leybourne and Newbold (1997). The null hypothesis is that the two methods have the same forecast accuracy. For alternative=less, the alternative hypothesis is that method 2 is less accurate than method 1. For alternative=greater, the alternative hypothesis is that method 2 is more accurate than method 1. For alternative=two.sided, the alternative hypothesis is that method 1 and method 2 have different levels of accuracy.")
+print("Diebold and Mariano test SPX1_GARCH11 with and without SVI")
+SPX1_GARCH11forecasterror_dm = SPX1_GARCH11forecasterror - (SPX1_GARCH11SVIforecasterror*0)
+SPX1_GARCH11SVIforecasterror_dm = SPX1_GARCH11SVIforecasterror - (SPX1_GARCH11forecasterror*0)
+dm.test(matrix(SPX1_GARCH11forecasterror_dm), matrix(SPX1_GARCH11SVIforecasterror_dm), alternative = "less")
+
+print("Diebold and Mariano test SPX1_GJRGARCH11 with and without SVI")
+SPX1_GJRGARCH11forecasterror_dm = SPX1_GJRGARCH11forecasterror - (SPX1_GJRGARCH11SVIforecasterror*0)
+SPX1_GJRGARCH11SVIforecasterror_dm = SPX1_GJRGARCH11SVIforecasterror - (SPX1_GJRGARCH11forecasterror*0)
+dm.test(matrix(SPX1_GJRGARCH11forecasterror_dm), matrix(SPX1_GJRGARCH11SVIforecasterror_dm), alternative = "less")
+
+print("Diebold and Mariano test SPX1_EGARCH11 with and without SVI")
+SPX1_EGARCH11forecasterror_dm = SPX1_EGARCH11forecasterror - (SPX1_EGARCH11SVIforecasterror*0)
+SPX1_EGARCH11SVIforecasterror_dm = SPX1_EGARCH11SVIforecasterror - (SPX1_EGARCH11forecasterror*0)
+dm.test(matrix(SPX1_EGARCH11forecasterror_dm), matrix(SPX1_EGARCH11SVIforecasterror_dm), alternative = "less")
+
+
+
+
+
+
 
 
 
@@ -2823,3 +3297,28 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.3.RData"
 
 
 # sink()
+
+
+
+
+# 
+# # historical averages of positive index returns of up to time
+# # t are used to predict the Rising Return:
+# R_R_m = mean(Observed_pi_zoo * R)
+# 
+# # historical averages of negative index returns of up to time
+# # t are used to predict the Falling Return:
+# 
+# 
+# 
+# xi = (1- tau_m) * (1 - tau_f)
+# 
+# w = ifelse(y_hat_d_EGARCH11SVI == 1,
+#        ifelse(y_d == 1, (R_Active_p), (0)),
+#        ifelse(y_d == 1, (0), (0)))
+# 
+# 
+# 
+# u = function(y_hat_d, y_d)
+# {
+#     ifelse(y_hat_d = 1, R_Active_p_sumed, )
