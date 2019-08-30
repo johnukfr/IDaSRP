@@ -1594,96 +1594,6 @@ GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(GJRGARCH11_CandD_zoo))
 # rm(GJRGARCH11_CandD_I_k)
 # rm(GJRGARCH11_CandD_I)
 
-
-
-#------------------------------------------------------------------------------
-# GARCH11-SVI's C&D Model
-#------------------------------------------------------------------------------
-
-# # Create our variables:
-
-# C&D's Indicator function according to the GARCH11-SVI Model:
-GARCH11SVI_CandD_I = matrix(, nrow=roll, ncol=roll)
-GARCH11SVI_CandD_I_k= matrix(, nrow=roll, ncol=roll)
-GARCH11SVI_CandD_I_t = matrix( - (GARCH11SVI_mu_hat/GARCH11SVI_sigma_hat))
-
-
-for(t in c(1:roll))
-{for (k in c(1:t))
-{GARCH11SVI_CandD_I_k[k,t] = 
-    ifelse(((FTSE_R_matrix[252+k]-GARCH11SVI_mu_hat[k])/GARCH11SVI_sigma_hat[k])
-           <=GARCH11SVI_CandD_I_t[t+1],
-           1,0)
-# Note that we have some missing values due to the model not always managing
-# to converge to estimates of sigma and mu; since we need the t+1 model
-# estimates to compute its CandD_I_k, we also loose its t'th value for
-# each model's missing value.
-# We also los the last value (the roll'th value) for the same reason.
-GARCH11SVI_CandD_I[k,t] = 
-    ifelse(
-        (is.na(GARCH11SVI_CandD_I_k[k,t])), NA,
-        (sum(GARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
-
-
-# C&D's model according to the GARCH11SVI Model:
-GARCH11SVI_CandD=(1:(roll-1))
-for(i in c(1:(roll-1)))
-{GARCH11SVI_CandD[i] = 1 - ((GARCH11SVI_CandD_I[i,i])/
-                                length(na.omit(GARCH11SVI_CandD_I[1:i,i])))}
-GARCH11SVI_CandD_zoo = zoo(GARCH11SVI_CandD,
-                           as.Date(Dates[(253+1):(253+(roll-1))]))
-# This zoo object has missing values.
-GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(GARCH11SVI_CandD_zoo))
-
-
-# rm(GARCH11SVI_CandD_I_t) # Cleaning datasets
-# rm(GARCH11SVI_CandD_I_k)
-# rm(GARCH11SVI_CandD_I)
-
-
-
-
-#------------------------------------------------------------------------------
-# GJRGARCH11's C&D Model
-#------------------------------------------------------------------------------
-
-# # Create our variables:
-
-# C&D's Indicator function according to the GJRGARCH11 Model:
-GJRGARCH11_CandD_I = matrix(, nrow=roll, ncol=roll)
-GJRGARCH11_CandD_I_k= matrix(, nrow=roll, ncol=roll)
-GJRGARCH11_CandD_I_t = matrix( - (GJRGARCH11_mu_hat/GJRGARCH11_sigma_hat))
-
-for(t in c(1:roll))
-{for (k in c(1:t))
-{GJRGARCH11_CandD_I_k[k,t] = 
-    ifelse(((FTSE_R_matrix[252+k]-GJRGARCH11_mu_hat[k])/GJRGARCH11_sigma_hat[k])
-           <=GJRGARCH11_CandD_I_t[t+1],
-           1,0)
-
-GJRGARCH11_CandD_I[k,t] = 
-    ifelse(
-        (is.na(GJRGARCH11_CandD_I_k[k,t])), NA,
-        (sum(GJRGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
-
-
-# C&D's model according to the GJRGARCH11 Model:
-GJRGARCH11_CandD=(1:(roll-1))
-for(i in c(1:(roll-1)))
-{GJRGARCH11_CandD[i] = 1 - ((GJRGARCH11_CandD_I[i,i])/
-                             length(na.omit(GJRGARCH11_CandD_I[1:i,i])))}
-GJRGARCH11_CandD_zoo = zoo(GJRGARCH11_CandD,
-                        as.Date(Dates[(253+1):(253+(roll-1))]))
-# This zoo object has missing values.
-GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(GJRGARCH11_CandD_zoo))
-
-
-# rm(GJRGARCH11_CandD_I_t) # Cleaning datasets
-# rm(GJRGARCH11_CandD_I_k)
-# rm(GJRGARCH11_CandD_I)
-
-
-
 #------------------------------------------------------------------------------
 # GJRGARCH11-SVI's C&D Model
 #------------------------------------------------------------------------------
@@ -1912,7 +1822,7 @@ dm.test(matrix(EGARCH11_pi_error_dm),
 
 
 ####----------------------------------------------------------------------------
-#### FTSE Economic significance
+#### FTSE Financial significance
 ####----------------------------------------------------------------------------
 
 
@@ -2869,13 +2779,6 @@ legend(lty=1, cex=1,
 
 
 
-####----------------------------------------------------------------------------
-#### End?
-####----------------------------------------------------------------------------
-
-
-
-
 
 
 ####---------------------------------------------------------------------------
@@ -2977,7 +2880,7 @@ SPX1_in_sample_GARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
 
 SPX1_GARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
 colnames(SPX1_GARCH11SVI_mu_hat) = c('SPX1_GARCH11_mu_hat')
-SPX1_GARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+SPX1_GARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
 colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
 
 for (i in c(1:SPX1_roll))
@@ -3099,7 +3002,7 @@ SPX1_in_sample_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
 
 SPX1_GJRGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
 colnames(SPX1_GJRGARCH11SVI_mu_hat) = c('SPX1_GJRGARCH11_mu_hat')
-SPX1_GJRGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+SPX1_GJRGARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
 colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
 
 for (i in c(1:SPX1_roll))
@@ -3151,7 +3054,7 @@ SPX1_in_sample_EGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
 
 
 ###----------------------------------------------------------------------------
-### Create the SPX1_AR(1)-EGARCH(1,1)-SVI Model and forecasts
+### Create the SPX1_AR(1)-EGARCH(1,1) Model and forecasts
 ###----------------------------------------------------------------------------
 
 
@@ -3207,20 +3110,20 @@ rmse(SPX_RV_no_SPX1_EGARCH11_sigma_hat_na_dated, (na.omit(SPX1_EGARCH11_sigma_ha
 ### SPX1 In-sample SPX1_AR(1)-EGARCH(1,1)-SVI Model
 ###---------------------------------------------------------------------------
 
-SPX1_in_sample_EGARCH11SVIfit = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
+SPX1_in_sample_EGARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
 SPX1_in_sample_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
                                          spec=SPX1_in_sample_EGARCH11SVI)
 
 
 ###----------------------------------------------------------------------------
-### Create the SPX1_AR(1)-GARCH(1,1)-SVI Model and forecasts
+### Create the SPX1_AR(1)-EGARCH(1,1)-SVI Model and forecasts
 ###----------------------------------------------------------------------------
 
 
 SPX1_EGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
-colnames(SPX1_EGARCH11SVI_mu_hat) = c('SPX1_EGARCH11_mu_hat')
-SPX1_EGARCH11_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
-colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
+colnames(SPX1_EGARCH11SVI_mu_hat) = c('SPX1_EGARCH11SVI_mu_hat')
+SPX1_EGARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPX1_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPX1_roll)]))
+colnames(EGARCH11SVI_sigma_hat) = c('EGARCH11SVI_sigma_hat')
 
 for (i in c(1:SPX1_roll))
 {SPX1_EGARCH11SVI = GARCH_model_spec(mod="eGARCH", exreg=as.matrix(SPX_dSVI_zoo[1:(246+i)]))
@@ -3267,17 +3170,17 @@ print("This function implements the modified test proposed by Harvey, Leybourne 
 print("Diebold and Mariano test SPX1_GARCH11 with and without SVI")
 SPX1_GARCH11forecasterror_dm = SPX1_GARCH11forecasterror - (SPX1_GARCH11SVIforecasterror*0)
 SPX1_GARCH11SVIforecasterror_dm = SPX1_GARCH11SVIforecasterror - (SPX1_GARCH11forecasterror*0)
-dm.test(matrix(SPX1_GARCH11forecasterror_dm), matrix(SPX1_GARCH11SVIforecasterror_dm), alternative = "less")
+SPX1_DM_Test_GARCH = dm.test(matrix(SPX1_GARCH11forecasterror_dm), matrix(SPX1_GARCH11SVIforecasterror_dm), alternative = "less")
 
 print("Diebold and Mariano test SPX1_GJRGARCH11 with and without SVI")
 SPX1_GJRGARCH11forecasterror_dm = SPX1_GJRGARCH11forecasterror - (SPX1_GJRGARCH11SVIforecasterror*0)
 SPX1_GJRGARCH11SVIforecasterror_dm = SPX1_GJRGARCH11SVIforecasterror - (SPX1_GJRGARCH11forecasterror*0)
-dm.test(matrix(SPX1_GJRGARCH11forecasterror_dm), matrix(SPX1_GJRGARCH11SVIforecasterror_dm), alternative = "less")
+SPX1_DM_Test_GJRARCH = dm.test(matrix(SPX1_GJRGARCH11forecasterror_dm), matrix(SPX1_GJRGARCH11SVIforecasterror_dm), alternative = "less")
 
 print("Diebold and Mariano test SPX1_EGARCH11 with and without SVI")
 SPX1_EGARCH11forecasterror_dm = SPX1_EGARCH11forecasterror - (SPX1_EGARCH11SVIforecasterror*0)
 SPX1_EGARCH11SVIforecasterror_dm = SPX1_EGARCH11SVIforecasterror - (SPX1_EGARCH11forecasterror*0)
-dm.test(matrix(SPX1_EGARCH11forecasterror_dm), matrix(SPX1_EGARCH11SVIforecasterror_dm), alternative = "less")
+SPX1_DM_Test_EGARCH = dm.test(matrix(SPX1_EGARCH11forecasterror_dm), matrix(SPX1_EGARCH11SVIforecasterror_dm), alternative = "less")
 
 
 
@@ -3291,9 +3194,1336 @@ dm.test(matrix(SPX1_EGARCH11forecasterror_dm), matrix(SPX1_EGARCH11SVIforecaster
 
 
 
+####---------------------------------------------------------------------------
+#### SPX1 estimates of the probability of a positive return
+####---------------------------------------------------------------------------
 
 
-save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.3.RData")
+###----------------------------------------------------------------------------
+### C&D, Naive
+###----------------------------------------------------------------------------
+
+
+##-----------------------------------------------------------------------------
+## Naive-Model and its forecast error statistics
+##-----------------------------------------------------------------------------
+
+
+# Naive-Model's Indicator function according to the GARCH11 Model:
+SPX_Naive_I = ifelse(SPX_R_matrix>0 , 1 , 0)
+
+# Naive Model:
+SPX_Naive=(1:(length(SPX_R_matrix)))
+for(t in c(1:(length(SPX_R_matrix))))
+{SPX_Naive[t] = (1/t) * sum(SPX_R_matrix[1:t])}
+# Note that the naive model provides the probability of aa positive return in
+# the next time period and therefore spams from 2004-01-06 to 2019-03-13.
+
+
+Naive_zoo = zoo(SPX_Naive, as.Date(rownames(as.matrix(SPX_R_zoo))))
+
+
+##-----------------------------------------------------------------------------
+## C&D's GARCH models with and without SVI
+## (Model independent variables' construction)
+##-----------------------------------------------------------------------------
+
+
+# mean of return up to time 'k'
+SPX_R_mu=(1:length(SPX_R_matrix))
+for (i in c(1:length(SPX_R_matrix))){SPX_R_mu[i]=mean(SPX_R_matrix[1:i])}
+
+# standard deviation of return up to time 'k'.
+# Note that its 1st value is NA since there is no standard deviation for a constant (according to R).
+SPX_R_sigma=(1:length(SPX_R_matrix))
+for (i in c(1:length(SPX_R_matrix))){R_sigma[i]=sd(SPX_R_matrix[1:i])}
+SPX_R_sigma[1]=0 # Since the variance of a constant is 0.
+
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11 Model:
+SPX1_GARCH11_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GARCH11_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GARCH11_CandD_I_t = matrix( - (SPX1_GARCH11_mu_hat/SPX1_GARCH11_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_GARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_GARCH11_mu_hat[k])/SPX1_GARCH11_sigma_hat[k])
+          <=SPX1_GARCH11_CandD_I_t[t+1],
+          1,0)
+
+# This will also be the number of out-of-sample predictions. N.B.: the 248th value of SPX_R_zoo corresponds to 2005-01-03, the 1st trading day out-of-sample, the first value after 252.
+
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the SPX1_roll'th value) for the same reason.
+SPX1_GARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_GARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPX1_GARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11 Model:
+SPX1_GARCH11_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_GARCH11_CandD[i] = 1 - ((SPX1_GARCH11_CandD_I[i,i])/
+                            length(na.omit(SPX1_GARCH11_CandD_I[1:i,i])))}
+SPX1_GARCH11_CandD_zoo = zoo(SPX1_GARCH11_CandD,
+                        as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_GARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_GARCH11_CandD_zoo))
+
+
+# rm(SPX1_GARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPX1_GARCH11_CandD_I_k)
+# rm(SPX1_GARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11SVI Model:
+SPX1_GARCH11SVI_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GARCH11SVI_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GARCH11SVI_CandD_I_t = matrix( - (SPX1_GARCH11SVI_mu_hat/SPX1_GARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_GARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_GARCH11SVI_mu_hat[k])/SPX1_GARCH11SVI_sigma_hat[k])
+          <=SPX1_GARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPX1_GARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_GARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPX1_GARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11SVI Model:
+SPX1_GARCH11SVI_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_GARCH11SVI_CandD[i] = 1 - ((SPX1_GARCH11SVI_CandD_I[i,i])/
+                                 length(na.omit(SPX1_GARCH11SVI_CandD_I[1:i,i])))}
+SPX1_GARCH11SVI_CandD_zoo = zoo(SPX1_GARCH11SVI_CandD,
+                             as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_GARCH11SVI_CandD_zoo))
+
+
+# rm(SPX1_GARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPX1_GARCH11SVI_CandD_I_k)
+# rm(SPX1_GARCH11SVI_CandD_I)
+
+
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11 Model:
+SPX1_GJRGARCH11_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GJRGARCH11_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GJRGARCH11_CandD_I_t = matrix( - (SPX1_GJRGARCH11_mu_hat/SPX1_GJRGARCH11_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_GJRGARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_GJRGARCH11_mu_hat[k])/SPX1_GJRGARCH11_sigma_hat[k])
+          <=SPX1_GJRGARCH11_CandD_I_t[t+1],
+          1,0)
+
+# This will also be the number of out-of-sample predictions. N.B.: the 248th value of SPX_R_zoo corresponds to 2005-01-03, the 1st trading day out-of-sample, the first value after 252.
+
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the SPX1_roll'th value) for the same reason.
+SPX1_GJRGARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_GJRGARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPX1_GJRGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11 Model:
+SPX1_GJRGARCH11_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_GJRGARCH11_CandD[i] = 1 - ((SPX1_GJRGARCH11_CandD_I[i,i])/
+                                 length(na.omit(SPX1_GJRGARCH11_CandD_I[1:i,i])))}
+SPX1_GJRGARCH11_CandD_zoo = zoo(SPX1_GJRGARCH11_CandD,
+                             as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_GJRGARCH11_CandD_zoo))
+
+
+# rm(SPX1_GJRGARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPX1_GJRGARCH11_CandD_I_k)
+# rm(SPX1_GJRGARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11SVI Model:
+SPX1_GJRGARCH11SVI_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GJRGARCH11SVI_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_GJRGARCH11SVI_CandD_I_t = matrix( - (SPX1_GJRGARCH11SVI_mu_hat/SPX1_GJRGARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_GJRGARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_GJRGARCH11SVI_mu_hat[k])/SPX1_GJRGARCH11SVI_sigma_hat[k])
+          <=SPX1_GJRGARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPX1_GJRGARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_GJRGARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPX1_GJRGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11SVI Model:
+SPX1_GJRGARCH11SVI_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_GJRGARCH11SVI_CandD[i] = 1 - ((SPX1_GJRGARCH11SVI_CandD_I[i,i])/
+                                    length(na.omit(SPX1_GJRGARCH11SVI_CandD_I[1:i,i])))}
+SPX1_GJRGARCH11SVI_CandD_zoo = zoo(SPX1_GJRGARCH11SVI_CandD,
+                                as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_GJRGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_GJRGARCH11SVI_CandD_zoo))
+
+
+# rm(SPX1_GJRGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPX1_GJRGARCH11SVI_CandD_I_k)
+# rm(SPX1_GJRGARCH11SVI_CandD_I)
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+# EGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11 Model:
+SPX1_EGARCH11_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_EGARCH11_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_EGARCH11_CandD_I_t = matrix( - (SPX1_EGARCH11_mu_hat/SPX1_EGARCH11_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_EGARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_EGARCH11_mu_hat[k])/SPX1_EGARCH11_sigma_hat[k])
+          <=SPX1_EGARCH11_CandD_I_t[t+1],
+          1,0)
+
+# This will also be the number of out-of-sample predictions. N.B.: the 248th value of SPX_R_zoo corresponds to 2005-01-03, the 1st trading day out-of-sample, the first value after 252.
+
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the SPX1_roll'th value) for the same reason.
+SPX1_EGARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_EGARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPX1_EGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11 Model:
+SPX1_EGARCH11_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_EGARCH11_CandD[i] = 1 - ((SPX1_EGARCH11_CandD_I[i,i])/
+                                 length(na.omit(SPX1_EGARCH11_CandD_I[1:i,i])))}
+SPX1_EGARCH11_CandD_zoo = zoo(SPX1_EGARCH11_CandD,
+                             as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_EGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_EGARCH11_CandD_zoo))
+
+
+# rm(SPX1_EGARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPX1_EGARCH11_CandD_I_k)
+# rm(SPX1_EGARCH11_CandD_I)
+
+
+
+#------------------------------------------------------------------------------
+# EGARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11SVI Model:
+SPX1_EGARCH11SVI_CandD_I = matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_EGARCH11SVI_CandD_I_k= matrix(, nrow=SPX1_roll, ncol=SPX1_roll)
+SPX1_EGARCH11SVI_CandD_I_t = matrix( - (SPX1_EGARCH11SVI_mu_hat/SPX1_EGARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPX1_roll))
+{for (k in c(1:t))
+{SPX1_EGARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPX1_EGARCH11SVI_mu_hat[k])/SPX1_EGARCH11SVI_sigma_hat[k])
+          <=SPX1_EGARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPX1_EGARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPX1_EGARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPX1_EGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11SVI Model:
+SPX1_EGARCH11SVI_CandD=(1:(SPX1_roll-1))
+for(i in c(1:(SPX1_roll-1)))
+{SPX1_EGARCH11SVI_CandD[i] = 1 - ((SPX1_EGARCH11SVI_CandD_I[i,i])/
+                                    length(na.omit(SPX1_EGARCH11SVI_CandD_I[1:i,i])))}
+SPX1_EGARCH11SVI_CandD_zoo = zoo(SPX1_EGARCH11SVI_CandD,
+                                as.Date(SPX_Dates[(248+1):(248+(SPX1_roll-1))]))
+# This zoo object has missing values.
+SPX1_EGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_EGARCH11SVI_CandD_zoo))
+
+
+# rm(SPX1_EGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPX1_EGARCH11SVI_CandD_I_k)
+# rm(SPX1_EGARCH11SVI_CandD_I)
+
+
+
+
+
+
+
+##-----------------------------------------------------------------------------
+## compare the predictive performance of each model
+## (forecast error mean, sd, Brier Scores and Diebold&Mariano statistics)
+##-----------------------------------------------------------------------------
+
+# # mean of the probabilistic forecast errors derived from each model
+
+SPX1_Observed_pi= ifelse(SPX_R_matrix>0,1,0)
+SPX1_Observed_pi_zoo = zoo(SPX1_Observed_pi, as.Date(SPX_Dates))
+
+SPX1_Naive_pi_error = SPX1_Naive_zoo - SPX1_Observed_pi_zoo
+SPX1_GARCH11_pi_error = SPX1_GARCH11_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+SPX1_GARCH11SVI_pi_error = SPX1_GARCH11SVI_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+SPX1_GJRGARCH11_pi_error = SPX1_GJRGARCH11_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+SPX1_GJRGARCH11SVI_pi_error = SPX1_GJRGARCH11SVI_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+SPX1_EGARCH11_pi_error = SPX1_EGARCH11_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+SPX1_EGARCH11SVI_pi_error = SPX1_EGARCH11SVI_CandD_zoo_no_nas - SPX1_Observed_pi_zoo
+
+
+
+mean(SPX1_Naive_pi_error)
+sd(SPX1_Naive_pi_error)
+
+mean(SPX1_GARCH11_pi_error)
+sd(SPX1_GARCH11_pi_error)
+
+mean(SPX1_GARCH11SVI_pi_error)
+sd(SPX1_GARCH11SVI_pi_error)
+
+mean(SPX1_GJRGARCH11_pi_error)
+sd(SPX1_GJRGARCH11_pi_error) 
+
+mean(SPX1_GJRGARCH11SVI_pi_error)
+sd(SPX1_GJRGARCH11SVI_pi_error)
+
+mean(SPX1_EGARCH11_pi_error)
+sd(SPX1_EGARCH11_pi_error)
+
+mean(SPX1_EGARCH11SVI_pi_error)
+sd(SPX1_EGARCH11SVI_pi_error)
+
+
+# # SPX1_Brier scores of the probabilistic forecast errors derived from each model
+
+
+SPX1_Naive_pi_error_Brier_score =
+   (1/length(SPX1_Naive_pi_error))*sum(SPX1_Naive_pi_error^2)
+show(SPX1_Naive_pi_error_Brier_score)
+
+SPX1_GARCH11_pi_error_Brier_score =
+   (1/length(SPX1_GARCH11_pi_error))*sum(SPX1_GARCH11_pi_error^2)
+show(SPX1_GARCH11_pi_error_Brier_score)
+
+SPX1_GARCH11SVI_pi_error_Brier_score =
+   (1/length(SPX1_GARCH11SVI_pi_error))*sum(SPX1_GARCH11SVI_pi_error^2)
+show(SPX1_GARCH11SVI_pi_error_Brier_score)
+
+SPX1_GJRGARCH11_pi_error_Brier_score =
+   (1/length(SPX1_GJRGARCH11_pi_error))*sum(SPX1_GJRGARCH11_pi_error^2)
+show(SPX1_GJRGARCH11_pi_error_Brier_score)
+
+SPX1_GJRGARCH11SVI_pi_error_Brier_score =
+   (1/length(SPX1_GJRGARCH11SVI_pi_error))*sum(SPX1_GJRGARCH11SVI_pi_error^2)
+show(SPX1_GJRGARCH11SVI_pi_error_Brier_score)
+
+SPX1_EGARCH11_pi_error_Brier_score =
+   (1/length(SPX1_EGARCH11_pi_error))*sum(SPX1_EGARCH11_pi_error^2)
+show(SPX1_EGARCH11_pi_error_Brier_score)
+
+SPX1_EGARCH11SVI_pi_error_Brier_score =
+   (1/length(SPX1_EGARCH11SVI_pi_error))*sum(SPX1_EGARCH11SVI_pi_error^2)
+show(SPX1_EGARCH11SVI_pi_error_Brier_score)
+
+
+# # SPX1_Diebold&Mariano statistics
+# Here the alternative hypothesis is that method 2 is more accurate than method 1; remember that a small p-value indicates strong evidence against the Null Hypothesis.
+
+SPX1_GARCH11_pi_error_dm = SPX1_GARCH11_pi_error - (SPX1_GARCH11SVI_pi_error*0)
+SPX1_GARCH11SVI_pi_error_dm = SPX1_GARCH11SVI_pi_error - (SPX1_GARCH11_pi_error*0)
+SPX1_GARCH11_dm_test = dm.test(matrix(SPX1_GARCH11_pi_error_dm), matrix(SPX1_GARCH11SVI_pi_error_dm), alternative = "greater")
+
+SPX1_GJRGARCH11_pi_error_dm = SPX1_GJRGARCH11_pi_error - (SPX1_GJRGARCH11SVI_pi_error*0)
+SPX1_GJRGARCH11SVI_pi_error_dm = SPX1_GJRGARCH11SVI_pi_error - (SPX1_GJRGARCH11_pi_error*0)
+SPX1_GJRGARCH11_dm_test = dm.test(matrix(SPX1_GJRGARCH11_pi_error_dm), matrix(SPX1_GJRGARCH11SVI_pi_error_dm), alternative = c("greater"))
+
+SPX1_EGARCH11_pi_error_dm = SPX1_EGARCH11_pi_error - (SPX1_EGARCH11SVI_pi_error*0)
+SPX1_EGARCH11SVI_pi_error_dm = SPX1_EGARCH11SVI_pi_error - (SPX1_EGARCH11_pi_error*0)
+SPX1_EGARCH11_dm_test = dm.test(matrix(SPX1_EGARCH11_pi_error_dm), matrix(SPX1_EGARCH11SVI_pi_error_dm), alternative = c("greater"))
+
+
+
+
+
+
+####----------------------------------------------------------------------------
+#### SPX1's Financial significance
+####----------------------------------------------------------------------------
+
+
+
+# indicator of the realised direction of the return on the S&P 500 index
+y_d = ifelse(SPX_R_zoo>0,1,0)
+
+
+# Set the probability threashold at which to invest in the index in our 2d graphs:
+
+for (p in c(0.49, 0.495, 0.5, 0.505, 0.51)){
+
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the GARCH11 model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_GARCH11 = ifelse(SPX1_GARCH11_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_GARCH11 = y_d - (SPX1_GARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_GARCH11),1))==1 , 1, 0)
+
+R_Active_SPX1_GARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_GARCH11*0)) +
+                             (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_GARCH11*0))))[2:length(y_hat_d_SPX1_GARCH11)]
+
+R_Active_SPX1_GARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPX1_GARCH11_p))
+for (i in c(1:length(R_Active_SPX1_GARCH11_p)))
+{R_Active_SPX1_GARCH11_p_cumulated[i] = prod((1+R_Active_SPX1_GARCH11_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_GARCH11_p))
+for (i in c(1:length(R_Active_SPX1_GARCH11_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_GARCH11_p*0))))[1:i])}
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the GARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_GARCH11SVI = ifelse(SPX1_GARCH11SVI_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_GARCH11SVI = y_d - (SPX1_GARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_GARCH11SVI),1))==1 , 1, 0)
+
+R_Active_SPX1_GARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_GARCH11SVI*0)) +
+                               (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_GARCH11SVI*0))))[2:length(y_hat_d_SPX1_GARCH11SVI)]
+
+R_Active_SPX1_GARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPX1_GARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_GARCH11SVI_p)))
+{R_Active_SPX1_GARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPX1_GARCH11SVI_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_GARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_GARCH11SVI_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_GARCH11SVI_p*0))))[1:i])}
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the GJRGARCH11 model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_GJRGARCH11 = ifelse(SPX1_GJRGARCH11_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_GJRGARCH11 = y_d - (SPX1_GJRGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_GJRGARCH11),1))==1 , 1, 0)
+
+R_Active_SPX1_GJRGARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_GJRGARCH11*0)) +
+                               (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_GJRGARCH11*0))))[2:length(y_hat_d_SPX1_GJRGARCH11)]
+
+R_Active_SPX1_GJRGARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPX1_GJRGARCH11_p))
+for (i in c(1:length(R_Active_SPX1_GJRGARCH11_p)))
+{R_Active_SPX1_GJRGARCH11_p_cumulated[i] = prod((1+R_Active_SPX1_GJRGARCH11_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_GJRGARCH11_p))
+for (i in c(1:length(R_Active_SPX1_GJRGARCH11_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_GJRGARCH11_p*0))))[1:i])}
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the GJRGARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_GJRGARCH11SVI = ifelse(SPX1_GJRGARCH11SVI_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_GJRGARCH11SVI = y_d - (SPX1_GJRGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_GJRGARCH11SVI),1))==1 , 1, 0)
+
+R_Active_SPX1_GJRGARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_GJRGARCH11SVI*0)) +
+                                  (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_GJRGARCH11SVI*0))))[2:length(y_hat_d_SPX1_GJRGARCH11SVI)]
+
+R_Active_SPX1_GJRGARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPX1_GJRGARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_GJRGARCH11SVI_p)))
+{R_Active_SPX1_GJRGARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPX1_GJRGARCH11SVI_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_GJRGARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_GJRGARCH11SVI_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_GJRGARCH11SVI_p*0))))[1:i])}
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the EGARCH11 model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_EGARCH11 = ifelse(SPX1_EGARCH11_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_EGARCH11 = y_d - (SPX1_EGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to EGARCH11's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_EGARCH11),1))==1 , 1, 0)
+
+R_Active_SPX1_EGARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_EGARCH11*0)) +
+                               (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_EGARCH11*0))))[2:length(y_hat_d_SPX1_EGARCH11)]
+
+R_Active_SPX1_EGARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPX1_EGARCH11_p))
+for (i in c(1:length(R_Active_SPX1_EGARCH11_p)))
+{R_Active_SPX1_EGARCH11_p_cumulated[i] = prod((1+R_Active_SPX1_EGARCH11_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_EGARCH11_p))
+for (i in c(1:length(R_Active_SPX1_EGARCH11_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_EGARCH11_p*0))))[1:i])}
+
+
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework using the EGARCH11-SVI model
+###----------------------------------------------------------------------------
+
+
+# corresponding directional forecast and realised direction
+y_hat_d_SPX1_EGARCH11SVI = ifelse(SPX1_EGARCH11SVI_CandD_zoo_no_nas>p,1,0)
+y_d_SPX1_EGARCH11SVI = y_d - (SPX1_EGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to EGARCH11SVI's.
+
+
+# let the portfolio weight attributed to the stock market index be
+omega = ifelse( (lead(as.matrix(y_hat_d_SPX1_EGARCH11SVI),1))==1 , 1, 0)
+
+R_Active_SPX1_EGARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPX1_EGARCH11SVI*0)) +
+                                  (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPX1_EGARCH11SVI*0))))[2:length(y_hat_d_SPX1_EGARCH11SVI)]
+
+R_Active_SPX1_EGARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPX1_EGARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_EGARCH11SVI_p)))
+{R_Active_SPX1_EGARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPX1_EGARCH11SVI_p)[1:i])}
+
+R_cumulated = matrix(,nrow=length(R_Active_SPX1_EGARCH11SVI_p))
+for (i in c(1:length(R_Active_SPX1_EGARCH11SVI_p)))
+{R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPX1_EGARCH11SVI_p*0))))[1:i])}
+
+
+
+###----------------------------------------------------------------------------
+### SPX1 Granger and Pesaran (2000)'s framework 2d Graphs put together
+###----------------------------------------------------------------------------
+
+
+# Plot all 2d polts
+
+plot(zoo(R_Active_SPX1_GARCH11_p_cumulated,
+         as.Date(zoo::index(y_hat_d_SPX1_GARCH11[2:length(y_hat_d_SPX1_GARCH11)]))),
+     cex.axis=1, type="l",col="red", xlab='Date', ylim=c(0,3), ylab='SPX1 strategy gain ($)', main=str_c("SPX1 Strategy for psi ", p))
+lines(zoo(R_cumulated,
+          as.Date(zoo::index(y_hat_d_SPX1_GARCH11[2:length(y_hat_d_SPX1_GARCH11)]))),
+      col="black")
+lines(zoo(R_Active_SPX1_GARCH11SVI_p_cumulated, as.Date(zoo::index(y_hat_d_SPX1_GARCH11SVI[2:length(y_hat_d_SPX1_GARCH11SVI)]))),
+      col="orange")
+lines(zoo(R_Active_SPX1_GJRGARCH11_p_cumulated,
+          as.Date(zoo::index(y_hat_d_SPX1_GJRGARCH11[2:length(y_hat_d_SPX1_GJRGARCH11)]))),
+      col="blue")
+lines(zoo(R_Active_SPX1_GJRGARCH11SVI_p_cumulated,
+          as.Date(zoo::index(y_hat_d_SPX1_GJRGARCH11SVI[2:length(y_hat_d_SPX1_GJRGARCH11SVI)]))),
+      col="magenta")
+lines(zoo(R_Active_SPX1_EGARCH11_p_cumulated,
+          as.Date(zoo::index(y_hat_d_SPX1_EGARCH11[2:length(y_hat_d_SPX1_EGARCH11)]))),
+      col="green")
+lines(zoo(R_Active_SPX1_EGARCH11SVI_p_cumulated,
+          as.Date(zoo::index(y_hat_d_SPX1_EGARCH11SVI[2:length(y_hat_d_SPX1_EGARCH11SVI)]))),
+      col="purple")
+legend(lty=1, cex=1,
+       "topleft", col=c("black", "red", "orange", "blue", "magenta", "green", "purple"),
+       legend=c("Buy and hold", "GARCH", "GARCH-SVI", "GJRGARCH", "GJRGARCH-SVI", "EGARCH", "EGARCH-SVI"))
+
+
+}
+
+
+
+
+
+
+####---------------------------------------------------------------------------
+#### End???????????????????
+####---------------------------------------------------------------------------
+
+
+
+
+####---------------------------------------------------------------------------
+#### SPXCPV GARCH models: create, train/fit them and create forecasts
+####---------------------------------------------------------------------------
+
+
+# Set parameters
+
+SPXCPV_roll = length(SPX_dSVICPV)-247
+
+# This will also be the number of out-of-sample predictions. N.B.: the 248th
+# value of R corresponds to 2005-01-03, the 1st trading day out-of-sample,
+# the first value after 247.
+
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-GARCH(1,1) Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_GARCH11 = GARCH_model_spec(mod="sGARCH", exreg= NULL)
+SPXCPV_in_sample_GARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                      spec=SPXCPV_in_sample_GARCH11)
+
+
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-GARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPXCPV_GARCH11_mu_hat = zoo(matrix(, nrow=roll, ncol=1),
+                          as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_GARCH11_mu_hat) = c('SPXCPV_GARCH11_mu_hat')
+SPXCPV_GARCH11_sigma_hat = zoo(matrix(, nrow=roll, ncol=1),
+                                  as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_GARCH11_sigma_hat) = c('SPXCPV_GARCH11_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_GARCH11 = GARCH_model_spec(mod="sGARCH", exreg=NULL)
+try(withTimeout({(SPXCPV_GARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_GARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPXCPV_GARCH11fitforecast = GARCH_model_forecast(mod=SPXCPV_GARCH11fit)), silent = TRUE)
+# suppressWarnings(expr)
+
+try((SPXCPV_GARCH11_mu_hat[i]=SPXCPV_GARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_GARCH11_sigma_hat[i]=SPXCPV_GARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_GARCH11)
+rm(SPXCPV_GARCH11fit)
+rm(SPXCPV_GARCH11fitforecast)
+}
+
+
+SPX_RV_no_SPXCPV_GARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_GARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_GARCH11forecasterror = (na.omit(SPXCPV_GARCH11_sigma_hat)
+                             -SPX_RV_no_SPXCPV_GARCH11_sigma_hat_na_dated)
+colnames(SPXCPV_GARCH11forecasterror) = c("SPXCPV_GARCH11forecasterror")
+
+mean(SPXCPV_GARCH11forecasterror)
+sd(SPXCPV_GARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_GARCH11_sigma_hat_na_dated, (na.omit(SPXCPV_GARCH11_sigma_hat)))
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.1_SPX_CPV_GARCH11.RData")
+
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-GARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_GARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
+SPXCPV_in_sample_GARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                         spec=SPXCPV_in_sample_GARCH11SVI)
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-GARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPXCPV_GARCH11SVI_mu_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_GARCH11SVI_mu_hat) = c('SPXCPV_GARCH11_mu_hat')
+SPXCPV_GARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(GARCH11_sigma_hat) = c('GARCH11_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_GARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg=as.matrix(SPX_dSVICPV[1:(246+i)]))
+try(withTimeout({(SPXCPV_GARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_GARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPXCPV_GARCH11SVIfitforecast = GARCH_model_forecast(mod=SPXCPV_GARCH11SVIfit)), silent = TRUE)
+
+try((SPXCPV_GARCH11SVI_mu_hat[i]=SPXCPV_GARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_GARCH11SVI_sigma_hat[i]=SPXCPV_GARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_GARCH11SVI)
+rm(SPXCPV_GARCH11SVIfit)
+rm(SPXCPV_GARCH11SVIfitforecast)
+}
+# fitted(GARCH11SVIfitforecast)
+
+
+SPX_RV_no_SPXCPV_GARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_GARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_GARCH11SVIforecasterror = (na.omit(SPXCPV_GARCH11SVI_sigma_hat)
+                                -SPX_RV_no_SPXCPV_GARCH11SVI_sigma_hat_na_dated)
+colnames(SPXCPV_GARCH11SVIforecasterror) = c("SPXCPV_GARCH11SVIforecasterror")
+# plot(zoo(GARCH11SVIforecasterror, as.Date(row.names(GARCH11SVIforecasterror))), type='l', ylab='GARCH11SVIforecasterror', xlab='Date')
+
+mean(SPXCPV_GARCH11SVIforecasterror)
+sd(SPXCPV_GARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_GARCH11SVI_sigma_hat_na_dated, (na.omit(SPXCPV_GARCH11SVI_sigma_hat)))
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.2_SPX_CPV_GARCH11SVI.RData")
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-GJRGARCH(1,1) Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg= NULL)
+SPXCPV_in_sample_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                         spec=in_sample_GJRGARCH11)
+
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-GJRGARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPXCPV_GJRGARCH11_mu_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1),
+                             as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_GJRGARCH11_mu_hat) = c('SPXCPV_GJRGARCH11_mu_hat')
+SPXCPV_GJRGARCH11_sigma_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1),
+                                as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg=NULL)
+try(withTimeout({(SPXCPV_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_GJRGARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPXCPV_GJRGARCH11fitforecast = GARCH_model_forecast(mod=SPXCPV_GJRGARCH11fit)), silent = TRUE)
+# suppressWarnings(expr)
+
+try((SPXCPV_GJRGARCH11_mu_hat[i]=SPXCPV_GJRGARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_GJRGARCH11_sigma_hat[i]=SPXCPV_GJRGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_GJRGARCH11)
+rm(SPXCPV_GJRGARCH11fit)
+rm(SPXCPV_GJRGARCH11fitforecast)
+}
+# fitted(GJRGARCH11fitforecast)
+
+
+SPX_RV_no_SPXCPV_GJRGARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_GJRGARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_GJRGARCH11forecasterror = (na.omit(SPXCPV_GJRGARCH11_sigma_hat)
+                                -SPX_RV_no_SPXCPV_GJRGARCH11_sigma_hat_na_dated)
+colnames(SPXCPV_GJRGARCH11forecasterror) = c("SPXCPV_GJRGARCH11forecasterror")
+# plot(zoo(GJRGARCH11forecasterror, as.Date(row.names(GJRGARCH11forecasterror))), type='l', ylab='GJRGARCH11forecasterror', xlab='Date')
+
+mean(SPXCPV_GJRGARCH11forecasterror)
+sd(SPXCPV_GJRGARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_GJRGARCH11_sigma_hat_na_dated, (na.omit(SPXCPV_GJRGARCH11_sigma_hat)))
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.3_SPX_CPV_GJRGARCH11.RData")
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-GJRGARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
+SPXCPV_in_sample_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                            spec=in_sample_GJRGARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-GJRGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPXCPV_GJRGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_GJRGARCH11SVI_mu_hat) = c('SPXCPV_GJRGARCH11_mu_hat')
+SPXCPV_GJRGARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(GJRGARCH11_sigma_hat) = c('GJRGARCH11_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg=as.matrix(SPX_dSVICPV[1:(246+i)]))
+try(withTimeout({(SPXCPV_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_GJRGARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPXCPV_GJRGARCH11SVIfitforecast = GARCH_model_forecast(mod=SPXCPV_GJRGARCH11SVIfit)), silent = TRUE)
+
+try((SPXCPV_GJRGARCH11SVI_mu_hat[i]=SPXCPV_GJRGARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_GJRGARCH11SVI_sigma_hat[i]=SPXCPV_GJRGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_GJRGARCH11SVI)
+rm(SPXCPV_GJRGARCH11SVIfit)
+rm(SPXCPV_GJRGARCH11SVIfitforecast)
+}
+
+
+SPX_RV_no_SPXCPV_GJRGARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_GJRGARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_GJRGARCH11SVIforecasterror = (na.omit(SPXCPV_GJRGARCH11SVI_sigma_hat)
+                                   -SPX_RV_no_SPXCPV_GJRGARCH11SVI_sigma_hat_na_dated)
+colnames(SPXCPV_GJRGARCH11SVIforecasterror) = c("SPXCPV_GJRGARCH11SVIforecasterror")
+# plot(zoo(GJRGARCH11SVIforecasterror, as.Date(row.names(GJRGARCH11SVIforecasterror))), type='l', ylab='GJRGARCH11SVIforecasterror', xlab='Date')
+
+mean(SPXCPV_GJRGARCH11SVIforecasterror)
+sd(SPXCPV_GJRGARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_GJRGARCH11SVI_sigma_hat_na_dated, (na.omit(SPXCPV_GJRGARCH11SVI_sigma_hat)))
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.4_SPX_CPV_GJRGARCH11SVI.RData")
+
+
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-EGARCH(1,1) Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_EGARCH11 = GARCH_model_spec(mod="eGARCH", exreg= NULL)
+SPXCPV_in_sample_EGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                       spec=SPXCPV_in_sample_EGARCH11)
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-EGARCH(1,1) Model and forecasts
+###----------------------------------------------------------------------------
+
+
+
+SPXCPV_EGARCH11_mu_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1),
+                           as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_EGARCH11_mu_hat) = c('SPXCPV_EGARCH11_mu_hat')
+SPXCPV_EGARCH11_sigma_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1),
+                              as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(EGARCH11_sigma_hat) = c('EGARCH11_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_EGARCH11 = GARCH_model_spec(mod="eGARCH", exreg=NULL)
+try(withTimeout({(SPXCPV_EGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_EGARCH11))}, timeout = 5),silent = TRUE)
+# the 247th value of R is 2004-12-31.
+
+try((SPXCPV_EGARCH11fitforecast = GARCH_model_forecast(mod=SPXCPV_EGARCH11fit)), silent = TRUE)
+# suppressWarnings(expr)
+
+try((SPXCPV_EGARCH11_mu_hat[i]=SPXCPV_EGARCH11fitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_EGARCH11_sigma_hat[i]=SPXCPV_EGARCH11fitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_EGARCH11)
+rm(SPXCPV_EGARCH11fit)
+rm(SPXCPV_EGARCH11fitforecast)
+}
+# fitted(EGARCH11fitforecast)
+
+
+SPX_RV_no_SPXCPV_EGARCH11_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_EGARCH11_sigma_hat*0),
+                  as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_EGARCH11forecasterror = (na.omit(SPXCPV_EGARCH11_sigma_hat)
+                              -SPX_RV_no_SPXCPV_EGARCH11_sigma_hat_na_dated)
+colnames(SPXCPV_EGARCH11forecasterror) = c("SPXCPV_EGARCH11forecasterror")
+# plot(zoo(EGARCH11forecasterror, as.Date(row.names(EGARCH11forecasterror))), type='l', ylab='EGARCH11forecasterror', xlab='Date')
+
+mean(SPXCPV_EGARCH11forecasterror)
+sd(SPXCPV_EGARCH11forecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_EGARCH11_sigma_hat_na_dated, (na.omit(SPXCPV_EGARCH11_sigma_hat)))
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.5_SPX_CPV_EGARCH11.RData")
+
+
+
+###----------------------------------------------------------------------------
+### SPXCPV In-sample SPXCPV_AR(1)-EGARCH(1,1)-SVI Model
+###---------------------------------------------------------------------------
+
+SPXCPV_in_sample_EGARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
+SPXCPV_in_sample_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
+                                          spec=SPXCPV_in_sample_EGARCH11SVI)
+
+
+###----------------------------------------------------------------------------
+### Create the SPXCPV_AR(1)-EGARCH(1,1)-SVI Model and forecasts
+###----------------------------------------------------------------------------
+
+
+SPXCPV_EGARCH11SVI_mu_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(SPXCPV_EGARCH11SVI_mu_hat) = c('SPXCPV_EGARCH11SVI_mu_hat')
+SPXCPV_EGARCH11SVI_sigma_hat = zoo(matrix(, nrow=SPXCPV_roll, ncol=1), as.Date(SPX_Datesm1[(247+1):(247+SPXCPV_roll)]))
+colnames(EGARCH11SVI_sigma_hat) = c('EGARCH11SVI_sigma_hat')
+
+for (i in c(1:SPXCPV_roll))
+{SPXCPV_EGARCH11SVI = GARCH_model_spec(mod="eGARCH", exreg=as.matrix(SPX_dSVICPV[1:(246+i)]))
+try(withTimeout({(SPXCPV_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+i)], spec=SPXCPV_EGARCH11SVI))}, timeout = 5),silent = TRUE)
+
+try((SPXCPV_EGARCH11SVIfitforecast = GARCH_model_forecast(mod=SPXCPV_EGARCH11SVIfit)), silent = TRUE)
+
+try((SPXCPV_EGARCH11SVI_mu_hat[i]=SPXCPV_EGARCH11SVIfitforecast@forecast[["seriesFor"]]),silent = TRUE)
+try((SPXCPV_EGARCH11SVI_sigma_hat[i]=SPXCPV_EGARCH11SVIfitforecast@forecast[["sigmaFor"]]), silent = TRUE)
+
+rm(SPXCPV_EGARCH11SVI)
+rm(SPXCPV_EGARCH11SVIfit)
+rm(SPXCPV_EGARCH11SVIfitforecast)
+}
+
+
+SPX_RV_no_SPXCPV_EGARCH11SVI_sigma_hat_na_dated = as.matrix(
+   (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
+    -(na.omit(zoo((SPXCPV_EGARCH11SVI_sigma_hat*0), as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))))))
+
+# Forecast Error, Mean and S.D.:
+SPXCPV_EGARCH11SVIforecasterror = (na.omit(SPXCPV_EGARCH11SVI_sigma_hat)
+                                 -SPX_RV_no_SPXCPV_EGARCH11SVI_sigma_hat_na_dated)
+colnames(SPXCPV_EGARCH11SVIforecasterror) = c("SPXCPV_EGARCH11SVIforecasterror")
+# plot(zoo(EGARCH11SVIforecasterror, as.Date(row.names(EGARCH11SVIforecasterror))), type='l', ylab='EGARCH11SVIforecasterror', xlab='Date')
+
+mean(SPXCPV_EGARCH11SVIforecasterror)
+sd(SPXCPV_EGARCH11SVIforecasterror)
+
+# RMSE of the sigme (standard deviations) of the forecast:
+rmse(SPX_RV_no_SPXCPV_EGARCH11SVI_sigma_hat_na_dated, (na.omit(SPXCPV_EGARCH11SVI_sigma_hat)))
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.6_SPX_CPV_EGARCH11SVI.RData")
+
+
+
+###---------------------------------------------------------------------------
+### s.d. forecase D-M tests
+###---------------------------------------------------------------------------
+
+print("This function implements the modified test proposed by Harvey, Leybourne and Newbold (1997). The null hypothesis is that the two methods have the same forecast accuracy. For alternative=less, the alternative hypothesis is that method 2 is less accurate than method 1. For alternative=greater, the alternative hypothesis is that method 2 is more accurate than method 1. For alternative=two.sided, the alternative hypothesis is that method 1 and method 2 have different levels of accuracy.")
+print("Diebold and Mariano test SPXCPV_GARCH11 with and without SVI")
+SPXCPV_GARCH11forecasterror_dm = SPXCPV_GARCH11forecasterror - (SPXCPV_GARCH11SVIforecasterror*0)
+SPXCPV_GARCH11SVIforecasterror_dm = SPXCPV_GARCH11SVIforecasterror - (SPXCPV_GARCH11forecasterror*0)
+SPXCPV_DM_Test_GARCH = dm.test(matrix(SPXCPV_GARCH11forecasterror_dm), matrix(SPXCPV_GARCH11SVIforecasterror_dm), alternative = "less")
+
+print("Diebold and Mariano test SPXCPV_GJRGARCH11 with and without SVI")
+SPXCPV_GJRGARCH11forecasterror_dm = SPXCPV_GJRGARCH11forecasterror - (SPXCPV_GJRGARCH11SVIforecasterror*0)
+SPXCPV_GJRGARCH11SVIforecasterror_dm = SPXCPV_GJRGARCH11SVIforecasterror - (SPXCPV_GJRGARCH11forecasterror*0)
+SPXCPV_DM_Test_GJRARCH = dm.test(matrix(SPXCPV_GJRGARCH11forecasterror_dm), matrix(SPXCPV_GJRGARCH11SVIforecasterror_dm), alternative = "less")
+
+print("Diebold and Mariano test SPXCPV_EGARCH11 with and without SVI")
+SPXCPV_EGARCH11forecasterror_dm = SPXCPV_EGARCH11forecasterror - (SPXCPV_EGARCH11SVIforecasterror*0)
+SPXCPV_EGARCH11SVIforecasterror_dm = SPXCPV_EGARCH11SVIforecasterror - (SPXCPV_EGARCH11forecasterror*0)
+SPXCPV_DM_Test_EGARCH = dm.test(matrix(SPXCPV_EGARCH11forecasterror_dm), matrix(SPXCPV_EGARCH11SVIforecasterror_dm), alternative = "less")
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.7_SPX_CPV_DM.RData")
+
+
+####---------------------------------------------------------------------------
+#### SPXCPV estimates of the probability of a positive return
+####---------------------------------------------------------------------------
+
+
+###----------------------------------------------------------------------------
+### C&D, Naive
+###----------------------------------------------------------------------------
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11 Model:
+SPXCPV_GARCH11_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GARCH11_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GARCH11_CandD_I_t = matrix( - (SPXCPV_GARCH11_mu_hat/SPXCPV_GARCH11_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_GARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_GARCH11_mu_hat[k])/SPXCPV_GARCH11_sigma_hat[k])
+          <=SPXCPV_GARCH11_CandD_I_t[t+1],
+          1,0)
+
+SPXCPV_GARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_GARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_GARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11 Model:
+SPXCPV_GARCH11_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_GARCH11_CandD[i] = 1 - ((SPXCPV_GARCH11_CandD_I[i,i])/
+                                 length(na.omit(SPXCPV_GARCH11_CandD_I[1:i,i])))}
+SPXCPV_GARCH11_CandD_zoo = zoo(SPXCPV_GARCH11_CandD,
+                             as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_GARCH11_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_GARCH11_CandD_zoo))
+
+
+# rm(SPXCPV_GARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_GARCH11_CandD_I_k)
+# rm(SPXCPV_GARCH11_CandD_I)
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.8_SPX_CPV_GARCH11_CandD.RData")
+
+
+
+#------------------------------------------------------------------------------
+# GARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GARCH11SVI Model:
+SPXCPV_GARCH11SVI_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GARCH11SVI_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GARCH11SVI_CandD_I_t = matrix( - (SPXCPV_GARCH11SVI_mu_hat/SPXCPV_GARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_GARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_GARCH11SVI_mu_hat[k])/SPXCPV_GARCH11SVI_sigma_hat[k])
+          <=SPXCPV_GARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPXCPV_GARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_GARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_GARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GARCH11SVI Model:
+SPXCPV_GARCH11SVI_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_GARCH11SVI_CandD[i] = 1 - ((SPXCPV_GARCH11SVI_CandD_I[i,i])/
+                                    length(na.omit(SPXCPV_GARCH11SVI_CandD_I[1:i,i])))}
+SPXCPV_GARCH11SVI_CandD_zoo = zoo(SPXCPV_GARCH11SVI_CandD,
+                                as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_GARCH11SVI_CandD_zoo))
+
+
+# rm(SPXCPV_GARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_GARCH11SVI_CandD_I_k)
+# rm(SPXCPV_GARCH11SVI_CandD_I)
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.9_SPX_CPV_GARCH11SVI_CandD.RData")
+
+
+#------------------------------------------------------------------------------
+# GJRGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11 Model:
+SPXCPV_GJRGARCH11_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GJRGARCH11_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GJRGARCH11_CandD_I_t = matrix( - (SPXCPV_GJRGARCH11_mu_hat/SPXCPV_GJRGARCH11_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_GJRGARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_GJRGARCH11_mu_hat[k])/SPXCPV_GJRGARCH11_sigma_hat[k])
+          <=SPXCPV_GJRGARCH11_CandD_I_t[t+1],
+          1,0)
+
+# This will also be the number of out-of-sample predictions. N.B.: the 248th value of SPX_R_zoo corresponds to 2005-01-03, the 1st trading day out-of-sample, the first value after 252.
+
+# Note that we have some missing values due to the model not always managing
+# to converge to estimates of sigma and mu; since we need the t+1 model
+# estimates to compute its CandD_I_k, we also loose its t'th value for
+# each model's missing value.
+# We also los the last value (the SPXCPV_roll'th value) for the same reason.
+SPXCPV_GJRGARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_GJRGARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_GJRGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11 Model:
+SPXCPV_GJRGARCH11_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_GJRGARCH11_CandD[i] = 1 - ((SPXCPV_GJRGARCH11_CandD_I[i,i])/
+                                    length(na.omit(SPXCPV_GJRGARCH11_CandD_I[1:i,i])))}
+SPXCPV_GJRGARCH11_CandD_zoo = zoo(SPXCPV_GJRGARCH11_CandD,
+                                as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_GJRGARCH11_CandD_zoo))
+
+
+# rm(SPXCPV_GJRGARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_GJRGARCH11_CandD_I_k)
+# rm(SPXCPV_GJRGARCH11_CandD_I)
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.10_SPX_CPV_GJRGARCH11_CandD.RData")
+
+#------------------------------------------------------------------------------
+# GJRGARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the GJRGARCH11SVI Model:
+SPXCPV_GJRGARCH11SVI_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GJRGARCH11SVI_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_GJRGARCH11SVI_CandD_I_t = matrix( - (SPXCPV_GJRGARCH11SVI_mu_hat/SPXCPV_GJRGARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_GJRGARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_GJRGARCH11SVI_mu_hat[k])/SPXCPV_GJRGARCH11SVI_sigma_hat[k])
+          <=SPXCPV_GJRGARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPXCPV_GJRGARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_GJRGARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_GJRGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the GJRGARCH11SVI Model:
+SPXCPV_GJRGARCH11SVI_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_GJRGARCH11SVI_CandD[i] = 1 - ((SPXCPV_GJRGARCH11SVI_CandD_I[i,i])/
+                                       length(na.omit(SPXCPV_GJRGARCH11SVI_CandD_I[1:i,i])))}
+SPXCPV_GJRGARCH11SVI_CandD_zoo = zoo(SPXCPV_GJRGARCH11SVI_CandD,
+                                   as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_GJRGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_GJRGARCH11SVI_CandD_zoo))
+
+
+# rm(SPXCPV_GJRGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_GJRGARCH11SVI_CandD_I_k)
+# rm(SPXCPV_GJRGARCH11SVI_CandD_I)
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.11_SPX_CPV_GJRGARCH11SVI_CandD.RData")
+
+
+
+
+#------------------------------------------------------------------------------
+# EGARCH11's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11 Model:
+SPXCPV_EGARCH11_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_EGARCH11_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_EGARCH11_CandD_I_t = matrix( - (SPXCPV_EGARCH11_mu_hat/SPXCPV_EGARCH11_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_EGARCH11_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_EGARCH11_mu_hat[k])/SPXCPV_EGARCH11_sigma_hat[k])
+          <=SPXCPV_EGARCH11_CandD_I_t[t+1],
+          1,0)
+
+SPXCPV_EGARCH11_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_EGARCH11_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_EGARCH11_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11 Model:
+SPXCPV_EGARCH11_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_EGARCH11_CandD[i] = 1 - ((SPXCPV_EGARCH11_CandD_I[i,i])/
+                                  length(na.omit(SPXCPV_EGARCH11_CandD_I[1:i,i])))}
+SPXCPV_EGARCH11_CandD_zoo = zoo(SPXCPV_EGARCH11_CandD,
+                              as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_EGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_EGARCH11_CandD_zoo))
+
+
+# rm(SPXCPV_EGARCH11_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_EGARCH11_CandD_I_k)
+# rm(SPXCPV_EGARCH11_CandD_I)
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.12_SPX_CPV_EGARCH11_CandD.RData")
+
+
+
+#------------------------------------------------------------------------------
+# EGARCH11SVI's C&D Model
+#------------------------------------------------------------------------------
+
+# # Create our variables:
+
+# C&D's Indicator function according to the EGARCH11SVI Model:
+SPXCPV_EGARCH11SVI_CandD_I = matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_EGARCH11SVI_CandD_I_k= matrix(, nrow=SPXCPV_roll, ncol=SPXCPV_roll)
+SPXCPV_EGARCH11SVI_CandD_I_t = matrix( - (SPXCPV_EGARCH11SVI_mu_hat/SPXCPV_EGARCH11SVI_sigma_hat))
+
+
+for(t in c(1:SPXCPV_roll))
+{for (k in c(1:t))
+{SPXCPV_EGARCH11SVI_CandD_I_k[k,t] = 
+   ifelse(((SPX_R_matrix[247+k]-SPXCPV_EGARCH11SVI_mu_hat[k])/SPXCPV_EGARCH11SVI_sigma_hat[k])
+          <=SPXCPV_EGARCH11SVI_CandD_I_t[t+1],
+          1,0)
+
+SPXCPV_EGARCH11SVI_CandD_I[k,t] = 
+   ifelse((is.na(SPXCPV_EGARCH11SVI_CandD_I_k[k,t])), NA,
+          (sum(SPXCPV_EGARCH11SVI_CandD_I_k[1:k,t], na.rm = TRUE)))}}
+
+
+# C&D's model according to the EGARCH11SVI Model:
+SPXCPV_EGARCH11SVI_CandD=(1:(SPXCPV_roll-1))
+for(i in c(1:(SPXCPV_roll-1)))
+{SPXCPV_EGARCH11SVI_CandD[i] = 1 - ((SPXCPV_EGARCH11SVI_CandD_I[i,i])/
+                                     length(na.omit(SPXCPV_EGARCH11SVI_CandD_I[1:i,i])))}
+SPXCPV_EGARCH11SVI_CandD_zoo = zoo(SPXCPV_EGARCH11SVI_CandD,
+                                 as.Date(SPX_Dates[(248+1):(248+(SPXCPV_roll-1))]))
+# This zoo object has missing values.
+SPXCPV_EGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_EGARCH11SVI_CandD_zoo))
+
+
+# rm(SPXCPV_EGARCH11SVI_CandD_I_t) # Cleaning datasets
+# rm(SPXCPV_EGARCH11SVI_CandD_I_k)
+# rm(SPXCPV_EGARCH11SVI_CandD_I)
+
+
+
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.13_SPX_CPV_EGARCH11SVI_CandD.RData")
+
+
+
+
+
+
+
+
+
+
 
 
 # sink()
@@ -3322,3 +4552,10 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.3.RData"
 # u = function(y_hat_d, y_d)
 # {
 #     ifelse(y_hat_d = 1, R_Active_p_sumed, )
+
+
+
+
+
+
+
