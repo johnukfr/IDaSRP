@@ -1845,7 +1845,7 @@ p = 0.5
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the Naive model
+### FTSE Granger and Pesaran (2000)'s framework using the Naive model
 ###----------------------------------------------------------------------------
 
 
@@ -1891,7 +1891,7 @@ lines(zoo(R_Active_Naive_p_cumulated,
 
 
 ##----------------------------------------------------------------------------
-## 3D graph Low Resolution
+## FTSE 3D graph Low Resolution
 ##----------------------------------------------------------------------------
 
 # Set the probability above which we would like our investing algorythm to invest in our 3d grath
@@ -2026,7 +2026,7 @@ lines(zoo(R_Active_Naive_p_cumulated,
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the GARCH11-SVI model (p=0.4935 seems best)
+### FTSE Granger and Pesaran (2000)'s framework using the GARCH11-SVI model (p=0.4935 seems best)
 ###----------------------------------------------------------------------------
 
 
@@ -2171,7 +2171,7 @@ GARCH11SVI_CandD_3D_HighRes = (plot_ly(z=R_Active_GARCH11SVI_p_cumulated, type="
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the GJRGARCH11 model (p=0.505 seems best)
+### FTSE Granger and Pesaran (2000)'s framework using the GJRGARCH11 model (p=0.505 seems best)
 ###----------------------------------------------------------------------------
 
 p = 0.505
@@ -2314,7 +2314,7 @@ GJRGARCH11_CandD_3D_HighRes = (plot_ly(z=R_Active_GJRGARCH11_p_cumulated, type="
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the GJRGARCH11SVI model (p=0.506 seems best)
+### FTSE Granger and Pesaran (2000)'s framework using the GJRGARCH11SVI model (p=0.506 seems best)
 ###----------------------------------------------------------------------------
 
 p = 0.506
@@ -2458,7 +2458,7 @@ GJRGARCH11SVI_CandD_3D_HighRes = (plot_ly(z=R_Active_GJRGARCH11SVI_p_cumulated, 
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the EGARCH11 model (p=0.499 seems best)
+### FTSE Granger and Pesaran (2000)'s framework using the EGARCH11 model (p=0.499 seems best)
 ###----------------------------------------------------------------------------
 
 p=0.499
@@ -2595,7 +2595,7 @@ EGARCH11_CandD_3D_HighRes = (plot_ly(z=R_Active_EGARCH11_p_cumulated, type="scat
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework using the EGARCH11-SVI model (p=0.46 seems best)
+### FTSE Granger and Pesaran (2000)'s framework using the EGARCH11-SVI model (p=0.46 seems best)
 ###----------------------------------------------------------------------------
 
 p=0.46
@@ -2742,7 +2742,7 @@ EGARCH11SVI_CandD_3D_HighRes = (plot_ly(z=R_Active_EGARCH11SVI_p_cumulated, type
 
 
 ###----------------------------------------------------------------------------
-### Granger and Pesaran (2000)'s framework 2d Graphs put together
+### FTSE Granger and Pesaran (2000)'s framework 2d Graphs put together
 ###----------------------------------------------------------------------------
 
 
@@ -2929,7 +2929,7 @@ rmse(SPX_RV_no_SPX1_GARCH11SVI_sigma_hat_na_dated, (na.omit(SPX1_GARCH11SVI_sigm
 
 SPX1_in_sample_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg= NULL)
 SPX1_in_sample_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
-                                      spec=in_sample_GJRGARCH11)
+                                      spec=SPX1_in_sample_GJRGARCH11)
 
 
 
@@ -2991,7 +2991,7 @@ rmse(SPX_RV_no_SPX1_GJRGARCH11_sigma_hat_na_dated, (na.omit(SPX1_GJRGARCH11_sigm
 
 SPX1_in_sample_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
 SPX1_in_sample_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
-                                         spec=in_sample_GJRGARCH11SVI)
+                                         spec=SPX1_in_sample_GJRGARCH11SVI)
 
 
 ###----------------------------------------------------------------------------
@@ -3110,7 +3110,7 @@ rmse(SPX_RV_no_SPX1_EGARCH11_sigma_hat_na_dated, (na.omit(SPX1_EGARCH11_sigma_ha
 ### SPX1 In-sample SPX1_AR(1)-EGARCH(1,1)-SVI Model
 ###---------------------------------------------------------------------------
 
-SPX1_in_sample_EGARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
+SPX1_in_sample_EGARCH11SVI = GARCH_model_spec(mod="eGARCH", exreg= as.matrix(SPX_dSVI_zoo[1:(246+1)]))
 SPX1_in_sample_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
                                          spec=SPX1_in_sample_EGARCH11SVI)
 
@@ -3200,7 +3200,7 @@ SPX1_DM_Test_EGARCH = dm.test(matrix(SPX1_EGARCH11forecasterror_dm), matrix(SPX1
 
 
 ###----------------------------------------------------------------------------
-### C&D, Naive
+### SPX1 C&D, Naive
 ###----------------------------------------------------------------------------
 
 
@@ -3224,7 +3224,7 @@ Naive_zoo = zoo(SPX_Naive, as.Date(rownames(as.matrix(SPX_R_zoo))))
 
 
 ##-----------------------------------------------------------------------------
-## C&D's GARCH models with and without SVI
+## SPX1 C&D's GARCH models with and without SVI
 ## (Model independent variables' construction)
 ##-----------------------------------------------------------------------------
 
@@ -3243,7 +3243,7 @@ SPX_R_sigma[1]=0 # Since the variance of a constant is 0.
 
 
 #------------------------------------------------------------------------------
-# GARCH11's C&D Model
+# SPX1 GARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3291,7 +3291,7 @@ SPX1_GARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_GARCH11_CandD_zoo))
 
 
 #------------------------------------------------------------------------------
-# GARCH11SVI's C&D Model
+# SPX1 GARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3333,7 +3333,7 @@ SPX1_GARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_GARCH11SVI_CandD_zoo))
 
 
 #------------------------------------------------------------------------------
-# GJRGARCH11's C&D Model
+# SPX1 GJRGARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3381,7 +3381,7 @@ SPX1_GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_GJRGARCH11_CandD_zoo))
 
 
 #------------------------------------------------------------------------------
-# GJRGARCH11SVI's C&D Model
+# SPX1 GJRGARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3426,7 +3426,7 @@ SPX1_GJRGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_GJRGARCH11SVI_CandD_zoo))
 
 
 #------------------------------------------------------------------------------
-# EGARCH11's C&D Model
+# SPX1 EGARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3474,7 +3474,7 @@ SPX1_EGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPX1_EGARCH11_CandD_zoo))
 
 
 #------------------------------------------------------------------------------
-# EGARCH11SVI's C&D Model
+# SPX1 EGARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -3519,7 +3519,7 @@ SPX1_EGARCH11SVI_CandD_zoo_no_nas=zoo(na.omit(SPX1_EGARCH11SVI_CandD_zoo))
 
 
 ##-----------------------------------------------------------------------------
-## compare the predictive performance of each model
+## SPX1 compare the predictive performance of each model
 ## (forecast error mean, sd, Brier Scores and Diebold&Mariano statistics)
 ##-----------------------------------------------------------------------------
 
@@ -3830,11 +3830,6 @@ legend(lty=1, cex=1,
 
 
 
-####---------------------------------------------------------------------------
-#### End???????????????????
-####---------------------------------------------------------------------------
-
-
 
 
 ####---------------------------------------------------------------------------
@@ -3979,7 +3974,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.2_SPX_
 
 SPXCPV_in_sample_GJRGARCH11 = GARCH_model_spec(mod="gjrGARCH", exreg= NULL)
 SPXCPV_in_sample_GJRGARCH11fit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
-                                         spec=in_sample_GJRGARCH11)
+                                         spec=SPXCPV_in_sample_GJRGARCH11)
 
 
 
@@ -4041,7 +4036,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.3_SPX_
 
 SPXCPV_in_sample_GJRGARCH11SVI = GARCH_model_spec(mod="gjrGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
 SPXCPV_in_sample_GJRGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
-                                            spec=in_sample_GJRGARCH11SVI)
+                                            spec=SPXCPV_in_sample_GJRGARCH11SVI)
 
 
 ###----------------------------------------------------------------------------
@@ -4159,7 +4154,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.5_SPX_
 ### SPXCPV In-sample SPXCPV_AR(1)-EGARCH(1,1)-SVI Model
 ###---------------------------------------------------------------------------
 
-SPXCPV_in_sample_EGARCH11SVI = GARCH_model_spec(mod="sGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
+SPXCPV_in_sample_EGARCH11SVI = GARCH_model_spec(mod="eGARCH", exreg= as.matrix(SPX_dSVICPV[1:(246+1)]))
 SPXCPV_in_sample_EGARCH11SVIfit = ugarchfit(data = SPX_R_matrix[1:(246+1)],
                                           spec=SPXCPV_in_sample_EGARCH11SVI)
 
@@ -4188,6 +4183,7 @@ rm(SPXCPV_EGARCH11SVIfit)
 rm(SPXCPV_EGARCH11SVIfitforecast)
 }
 
+SPXCPV_EGARCH11SVI_sigma_hat[2874] = NA # This is due to a bad conversion specifically for EGARCH11SVI at i=2874.
 
 SPX_RV_no_SPXCPV_EGARCH11SVI_sigma_hat_na_dated = as.matrix(
    (zoo(SPX_RV[(248+1):(248+SPXCPV_roll)], as.Date(SPX_Dates[(248+1):(248+SPXCPV_roll)]))
@@ -4246,7 +4242,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.7_SPX_
 
 
 #------------------------------------------------------------------------------
-# GARCH11's C&D Model
+# SPXCPV GARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4291,7 +4287,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.8_SPX_
 
 
 #------------------------------------------------------------------------------
-# GARCH11SVI's C&D Model
+# SPXCPV GARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4333,7 +4329,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.9_SPX_
 
 
 #------------------------------------------------------------------------------
-# GJRGARCH11's C&D Model
+# SPXCPV GJRGARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4381,7 +4377,7 @@ SPXCPV_GJRGARCH11_CandD_zoo_no_nas=zoo(na.omit(SPXCPV_GJRGARCH11_CandD_zoo))
 save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.10_SPX_CPV_GJRGARCH11_CandD.RData")
 
 #------------------------------------------------------------------------------
-# GJRGARCH11SVI's C&D Model
+# SPXCPV GJRGARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4426,7 +4422,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.11_SPX
 
 
 #------------------------------------------------------------------------------
-# EGARCH11's C&D Model
+# SPXCPV EGARCH11's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4470,7 +4466,7 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.12_SPX
 
 
 #------------------------------------------------------------------------------
-# EGARCH11SVI's C&D Model
+# SPXCPV EGARCH11SVI's C&D Model
 #------------------------------------------------------------------------------
 
 # # Create our variables:
@@ -4517,16 +4513,325 @@ save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.13_SPX
 
 
 
+##-----------------------------------------------------------------------------
+## compare the predictive performance of each model using SPXCPV data
+## (forecast error mean, sd, Brier Scores and Diebold&Mariano statistics)
+##-----------------------------------------------------------------------------
+
+# # mean of the probabilistic forecast errors derived from each model
+
+SPXCPV_Observed_pi= ifelse(SPX_R_matrix>0,1,0)
+SPXCPV_Observed_pi_zoo = zoo(SPXCPV_Observed_pi, as.Date(SPX_Dates))
+
+SPXCPV_GARCH11_pi_error = SPXCPV_GARCH11_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+SPXCPV_GARCH11SVI_pi_error = SPXCPV_GARCH11SVI_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+SPXCPV_GJRGARCH11_pi_error = SPXCPV_GJRGARCH11_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+SPXCPV_GJRGARCH11SVI_pi_error = SPXCPV_GJRGARCH11SVI_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+SPXCPV_EGARCH11_pi_error = SPXCPV_EGARCH11_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+SPXCPV_EGARCH11SVI_pi_error = SPXCPV_EGARCH11SVI_CandD_zoo_no_nas - SPXCPV_Observed_pi_zoo
+
+
+
+mean(SPXCPV_GARCH11_pi_error)
+sd(SPXCPV_GARCH11_pi_error)
+
+mean(SPXCPV_GARCH11SVI_pi_error)
+sd(SPXCPV_GARCH11SVI_pi_error)
+
+mean(SPXCPV_GJRGARCH11_pi_error)
+sd(SPXCPV_GJRGARCH11_pi_error) 
+
+mean(SPXCPV_GJRGARCH11SVI_pi_error)
+sd(SPXCPV_GJRGARCH11SVI_pi_error)
+
+mean(SPXCPV_EGARCH11_pi_error)
+sd(SPXCPV_EGARCH11_pi_error)
+
+mean(SPXCPV_EGARCH11SVI_pi_error)
+sd(SPXCPV_EGARCH11SVI_pi_error)
+
+
+# # SPXCPV_Brier scores of the probabilistic forecast errors derived from each model
+
+
+SPXCPV_GARCH11_pi_error_Brier_score =
+   (1/length(SPXCPV_GARCH11_pi_error))*sum(SPXCPV_GARCH11_pi_error^2)
+show(SPXCPV_GARCH11_pi_error_Brier_score)
+
+SPXCPV_GARCH11SVI_pi_error_Brier_score =
+   (1/length(SPXCPV_GARCH11SVI_pi_error))*sum(SPXCPV_GARCH11SVI_pi_error^2)
+show(SPXCPV_GARCH11SVI_pi_error_Brier_score)
+
+SPXCPV_GJRGARCH11_pi_error_Brier_score =
+   (1/length(SPXCPV_GJRGARCH11_pi_error))*sum(SPXCPV_GJRGARCH11_pi_error^2)
+show(SPXCPV_GJRGARCH11_pi_error_Brier_score)
+
+SPXCPV_GJRGARCH11SVI_pi_error_Brier_score =
+   (1/length(SPXCPV_GJRGARCH11SVI_pi_error))*sum(SPXCPV_GJRGARCH11SVI_pi_error^2)
+show(SPXCPV_GJRGARCH11SVI_pi_error_Brier_score)
+
+SPXCPV_EGARCH11_pi_error_Brier_score =
+   (1/length(SPXCPV_EGARCH11_pi_error))*sum(SPXCPV_EGARCH11_pi_error^2)
+show(SPXCPV_EGARCH11_pi_error_Brier_score)
+
+SPXCPV_EGARCH11SVI_pi_error_Brier_score =
+   (1/length(SPXCPV_EGARCH11SVI_pi_error))*sum(SPXCPV_EGARCH11SVI_pi_error^2)
+show(SPXCPV_EGARCH11SVI_pi_error_Brier_score)
+
+
+# # SPXCPV_Diebold&Mariano statistics
+# Here the alternative hypothesis is that method 2 is more accurate than method 1; remember that a small p-value indicates strong evidence against the Null Hypothesis.
+
+SPXCPV_GARCH11_pi_error_dm = SPXCPV_GARCH11_pi_error - (SPXCPV_GARCH11SVI_pi_error*0)
+SPXCPV_GARCH11SVI_pi_error_dm = SPXCPV_GARCH11SVI_pi_error - (SPXCPV_GARCH11_pi_error*0)
+SPXCPV_GARCH11_dm_test = dm.test(matrix(SPXCPV_GARCH11_pi_error_dm), matrix(SPXCPV_GARCH11SVI_pi_error_dm), alternative = "greater")
+
+SPXCPV_GJRGARCH11_pi_error_dm = SPXCPV_GJRGARCH11_pi_error - (SPXCPV_GJRGARCH11SVI_pi_error*0)
+SPXCPV_GJRGARCH11SVI_pi_error_dm = SPXCPV_GJRGARCH11SVI_pi_error - (SPXCPV_GJRGARCH11_pi_error*0)
+SPXCPV_GJRGARCH11_dm_test = dm.test(matrix(SPXCPV_GJRGARCH11_pi_error_dm), matrix(SPXCPV_GJRGARCH11SVI_pi_error_dm), alternative = c("greater"))
+
+SPXCPV_EGARCH11_pi_error_dm = SPXCPV_EGARCH11_pi_error - (SPXCPV_EGARCH11SVI_pi_error*0)
+SPXCPV_EGARCH11SVI_pi_error_dm = SPXCPV_EGARCH11SVI_pi_error - (SPXCPV_EGARCH11_pi_error*0)
+SPXCPV_EGARCH11_dm_test = dm.test(matrix(SPXCPV_EGARCH11_pi_error_dm), matrix(SPXCPV_EGARCH11SVI_pi_error_dm), alternative = c("greater"))
 
 
 
 
 
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.14_SPX_CPV_pi_DM.RData")
 
+
+
+####----------------------------------------------------------------------------
+#### SPXCPV's Financial significance
+####----------------------------------------------------------------------------
+
+
+
+# indicator of the realised direction of the return on the S&P 500 index
+y_d = ifelse(SPX_R_zoo>0,1,0)
+
+
+# Set the probability threashold at which to invest in the index in our 2d graphs:
+
+for (p in c(0.49, 0.495, 0.5, 0.505, 0.51)){
+   
+   
+   
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the GARCH11 model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_GARCH11 = ifelse(SPXCPV_GARCH11_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_GARCH11 = y_d - (SPXCPV_GARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_GARCH11),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_GARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_GARCH11*0)) +
+                                  (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_GARCH11*0))))[2:length(y_hat_d_SPXCPV_GARCH11)]
+   
+   R_Active_SPXCPV_GARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_GARCH11_p)))
+   {R_Active_SPXCPV_GARCH11_p_cumulated[i] = prod((1+R_Active_SPXCPV_GARCH11_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_GARCH11_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_GARCH11_p*0))))[1:i])}
+   
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the GARCH11-SVI model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_GARCH11SVI = ifelse(SPXCPV_GARCH11SVI_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_GARCH11SVI = y_d - (SPXCPV_GARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GARCH11SVI's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_GARCH11SVI),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_GARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_GARCH11SVI*0)) +
+                                     (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_GARCH11SVI*0))))[2:length(y_hat_d_SPXCPV_GARCH11SVI)]
+   
+   R_Active_SPXCPV_GARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_GARCH11SVI_p)))
+   {R_Active_SPXCPV_GARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPXCPV_GARCH11SVI_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_GARCH11SVI_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_GARCH11SVI_p*0))))[1:i])}
+   
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the GJRGARCH11 model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_GJRGARCH11 = ifelse(SPXCPV_GJRGARCH11_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_GJRGARCH11 = y_d - (SPXCPV_GJRGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_GJRGARCH11),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_GJRGARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_GJRGARCH11*0)) +
+                                     (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_GJRGARCH11*0))))[2:length(y_hat_d_SPXCPV_GJRGARCH11)]
+   
+   R_Active_SPXCPV_GJRGARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GJRGARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_GJRGARCH11_p)))
+   {R_Active_SPXCPV_GJRGARCH11_p_cumulated[i] = prod((1+R_Active_SPXCPV_GJRGARCH11_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GJRGARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_GJRGARCH11_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_GJRGARCH11_p*0))))[1:i])}
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the GJRGARCH11-SVI model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_GJRGARCH11SVI = ifelse(SPXCPV_GJRGARCH11SVI_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_GJRGARCH11SVI = y_d - (SPXCPV_GJRGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to GJRGARCH11SVI's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_GJRGARCH11SVI),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_GJRGARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_GJRGARCH11SVI*0)) +
+                                        (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_GJRGARCH11SVI*0))))[2:length(y_hat_d_SPXCPV_GJRGARCH11SVI)]
+   
+   R_Active_SPXCPV_GJRGARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GJRGARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_GJRGARCH11SVI_p)))
+   {R_Active_SPXCPV_GJRGARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPXCPV_GJRGARCH11SVI_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_GJRGARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_GJRGARCH11SVI_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_GJRGARCH11SVI_p*0))))[1:i])}
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the EGARCH11 model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_EGARCH11 = ifelse(SPXCPV_EGARCH11_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_EGARCH11 = y_d - (SPXCPV_EGARCH11_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to EGARCH11's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_EGARCH11),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_EGARCH11_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_EGARCH11*0)) +
+                                   (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_EGARCH11*0))))[2:length(y_hat_d_SPXCPV_EGARCH11)]
+   
+   R_Active_SPXCPV_EGARCH11_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_EGARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_EGARCH11_p)))
+   {R_Active_SPXCPV_EGARCH11_p_cumulated[i] = prod((1+R_Active_SPXCPV_EGARCH11_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_EGARCH11_p))
+   for (i in c(1:length(R_Active_SPXCPV_EGARCH11_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_EGARCH11_p*0))))[1:i])}
+   
+   
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework using the EGARCH11-SVI model
+   ###----------------------------------------------------------------------------
+   
+   
+   # corresponding directional forecast and realised direction
+   y_hat_d_SPXCPV_EGARCH11SVI = ifelse(SPXCPV_EGARCH11SVI_CandD_zoo_no_nas>p,1,0)
+   y_d_SPXCPV_EGARCH11SVI = y_d - (SPXCPV_EGARCH11SVI_CandD_zoo_no_nas*0) # This y_d only has values on dates corresponding to EGARCH11SVI's.
+   
+   
+   # let the portfolio weight attributed to the stock market index be
+   omega = ifelse( (lead(as.matrix(y_hat_d_SPXCPV_EGARCH11SVI),1))==1 , 1, 0)
+   
+   R_Active_SPXCPV_EGARCH11SVI_p = ((lag(omega,1) * (SPX_R_zoo-(y_hat_d_SPXCPV_EGARCH11SVI*0)) +
+                                      (1-lag(omega,1)) * (US_1MO_r_f_zoo-(y_hat_d_SPXCPV_EGARCH11SVI*0))))[2:length(y_hat_d_SPXCPV_EGARCH11SVI)]
+   
+   R_Active_SPXCPV_EGARCH11SVI_p_cumulated = matrix(,nrow=length(R_Active_SPXCPV_EGARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_EGARCH11SVI_p)))
+   {R_Active_SPXCPV_EGARCH11SVI_p_cumulated[i] = prod((1+R_Active_SPXCPV_EGARCH11SVI_p)[1:i])}
+   
+   R_cumulated = matrix(,nrow=length(R_Active_SPXCPV_EGARCH11SVI_p))
+   for (i in c(1:length(R_Active_SPXCPV_EGARCH11SVI_p)))
+   {R_cumulated[i] = prod((1+(SPX_R_zoo+(US_1MO_r_f_zoo - (R_Active_SPXCPV_EGARCH11SVI_p*0))))[1:i])}
+   
+   
+   
+   ###----------------------------------------------------------------------------
+   ### SPXCPV Granger and Pesaran (2000)'s framework 2d Graphs put together
+   ###----------------------------------------------------------------------------
+   
+   
+   # Plot all 2d polts
+   
+   plot(zoo(R_Active_SPXCPV_GARCH11_p_cumulated,
+            as.Date(zoo::index(y_hat_d_SPXCPV_GARCH11[2:length(y_hat_d_SPXCPV_GARCH11)]))),
+        cex.axis=1, type="l",col="red", xlab='Date', ylim=c(0,3), ylab='SPXCPV strategy gain ($)', main=str_c("SPXCPV Strategy for psi ", p))
+   lines(zoo(R_cumulated,
+             as.Date(zoo::index(y_hat_d_SPXCPV_GARCH11[2:length(y_hat_d_SPXCPV_GARCH11)]))),
+         col="black")
+   lines(zoo(R_Active_SPXCPV_GARCH11SVI_p_cumulated, as.Date(zoo::index(y_hat_d_SPXCPV_GARCH11SVI[2:length(y_hat_d_SPXCPV_GARCH11SVI)]))),
+         col="orange")
+   lines(zoo(R_Active_SPXCPV_GJRGARCH11_p_cumulated,
+             as.Date(zoo::index(y_hat_d_SPXCPV_GJRGARCH11[2:length(y_hat_d_SPXCPV_GJRGARCH11)]))),
+         col="blue")
+   lines(zoo(R_Active_SPXCPV_GJRGARCH11SVI_p_cumulated,
+             as.Date(zoo::index(y_hat_d_SPXCPV_GJRGARCH11SVI[2:length(y_hat_d_SPXCPV_GJRGARCH11SVI)]))),
+         col="magenta")
+   lines(zoo(R_Active_SPXCPV_EGARCH11_p_cumulated,
+             as.Date(zoo::index(y_hat_d_SPXCPV_EGARCH11[2:length(y_hat_d_SPXCPV_EGARCH11)]))),
+         col="green")
+   lines(zoo(R_Active_SPXCPV_EGARCH11SVI_p_cumulated,
+             as.Date(zoo::index(y_hat_d_SPXCPV_EGARCH11SVI[2:length(y_hat_d_SPXCPV_EGARCH11SVI)]))),
+         col="purple")
+   legend(lty=1, cex=1,
+          "topleft", col=c("black", "red", "orange", "blue", "magenta", "green", "purple"),
+          legend=c("Buy and hold", "GARCH", "GARCH-SVI", "GJRGARCH", "GJRGARCH-SVI", "EGARCH", "EGARCH-SVI"))
+   
+   
+}
+
+
+
+
+
+save.image("C:/Users/johnukfr/OneDrive/UoE/Disertation/Maths/IDaSRP_077.4.15_SPX_CPV_Finance.RData")
 
 
 
 # sink()
+
+
+
+
+####---------------------------------------------------------------------------
+#### End???????????????????
+####---------------------------------------------------------------------------
+
 
 
 
