@@ -1,9 +1,4 @@
 #####-------------------------------------------------------------
-##### Python Code post Disertation 'Information Demand and Stock
-#####   Return Predictability'
-#####
-##### Written by: Jonathan Legrand
-#####
 ##### This code is designed to collect Google Trends Data
 #####   at a daily frequancy normalised throughout from 0 to
 #####   100 from as close to the first of January 2004 (01-01-2004)
@@ -30,18 +25,41 @@ print("Welcome to the Comparable Worldwide Daily Google Trends Data Collector \n
 # Please input the search term that is wished to be looked up on Google Trends
 SearchTerm = input("What search term would you like to get Google Trends for? E.g.: S&P 500\n")
 
+# This is for testing:
+#   If SearchTerm is empty because the user pressed 'ENTER', then it will automatically be 's&p 500' just as in my disertation
+if (SearchTerm == ""):
+    SearchTerm = "s&p 500"
+else:
+    pass
+
+
 # Please input the file path to your webdriver
 #   Note that it needs to be entered with '\\', not '/'
-#   e.g.: C:\\Users\\UserName\\Programs\\chromedriver.exe
+#   e.g.: C:\\Users\\johnf\\Documents\\Programs\\chromedriver.exe
 webdriver_path = input("\nWhat is the directory of your Google Drive Selenium Webdriver?\n" +
                        "Note that it needs to be entered with '\\\\', not '/' \n")
 
+# This is for testing:
+#   If webdriver_path is empty because the user pressed 'ENTER', then it will automatically be 'C:\\Users\\johnf\\Documents\\Programs\\chromedriver.exe'
+if (webdriver_path == ""):
+    webdriver_path = "C:\\Users\\johnf\\Documents\\Programs\\chromedriver.exe"
+else:
+    pass
+
 # Please input the file path to your Downloads folder
-#   e.g.: C:\\Users\\UserName\\Downloads
+#   e.g.: C:\\Users\\johnf\\Downloads
 UserDownloadFolderPath = input("\nPlease input the file path to your Downloads folder \n" +
                                "Please make sure that no file named 'multiTimeline.csv' are saved in tat location prior to answering\n" +
                                "If you do not have one, please find one under the link 'https://selenium-python.readthedocs.io/installation.html'\n" +
                                "Note that its path needs to be entered with '\\\\', not '/' or '\\'\n")
+
+# This is for testing:
+#   If UserDownloadFolderPath is empty because the user pressed 'ENTER', then it will automatically be 'C:\\Users\\johnf\\Downloads'
+if (UserDownloadFolderPath == ""):
+    UserDownloadFolderPath = "C:\\Users\\johnf\\Downloads"
+else:
+    pass
+
 
 
 
@@ -71,9 +89,24 @@ import pandas as pd
 
 
 
+
 ####--------------------------------------------------------------
 #### Setup Functions
 ####--------------------------------------------------------------
+
+
+# We will be able to manage folders with the following function
+def create_folder_if_it_does_not_exist(folder_name):
+    if not os.path.exists(str(os.path.dirname(__file__) +
+                              "\\" + str(folder_name))):
+        os.makedirs(str(os.path.dirname(__file__) +
+                        "\\" + str(folder_name)))
+
+def create_file_if_it_does_not_exist(file_name):
+    if not os.path.isfile(str(os.path.dirname(__file__) +
+                              "\\" + str(file_name))):
+        file = open(str(file_name),'w+')
+        file.close()
 
 
 # The values in our pandas dataframes will be quite long, so the bellow will cash themin whole
@@ -157,6 +190,23 @@ def QuarterSearchLessFirstStep(Path2No, Path4No, QStart, QEnd):
 
 
 ####--------------------------------------------------------------
+#### Setting up error managment folders and text files
+####--------------------------------------------------------------
+
+# Create the folder in which we will have our error management log
+create_folder_if_it_does_not_exist("Error_Checks")
+
+# Create our error managemtn log
+create_file_if_it_does_not_exist("Error_Checks\\Selenium Google Trends Error Checks.txt")
+
+# Append the text file with new log
+file = open("Error_Checks\\Selenium Google Trends Error Checks.txt",'a')
+file.write("\nLast started to run on " + str(datetime.datetime.now()) + "\n")
+file.close()
+
+
+
+####--------------------------------------------------------------
 #### Setting up dates
 ####--------------------------------------------------------------
 
@@ -166,7 +216,7 @@ DateLapseDTS = datetime.timedelta(days = 90) # Google Trends offers daily data p
 OneDayDTS = datetime.timedelta(days = 1)
 
 # The line bellow shows the number of 90 day time windows within our full time sample
-NTimeWindows = (abs(DateNowDTS - datetime.datetime(2004, 1, 1)).days) / 90
+NTimeWindows = (abs(DateNowDTS - datetime.datetime(2004, 1, 1)).days) / 90 # The -1 is a nessesary precaution so that our script doesn't request of Google Trends values from before 01/01/2004.
 
 
 ## Start loop to create list of starting and ending dates of each time window for which Google Trends data is collected
@@ -201,6 +251,12 @@ for i in list(range(0, int(NTimeWindows))):
 ###--------------------------------------------------------------
 
 
+# The following is a (non fool proof) way to make sure there isn't a 'multiTimeline.csv' file in the user's downloads folder
+if os.path.isfile(str(UserDownloadFolderPath + "\\multiTimeline.csv")):
+    os.rename(str(UserDownloadFolderPath + "\\multiTimeline.csv"),
+              str(UserDownloadFolderPath + "\\multiTimeline before " + str(DateNowDTS) + ".csv"))
+
+
 # Google Trends' download file url changes constantly, but the one to Google Trend's search page does not. We thus try to have a download url from the search page using a bot via 'Selenium'.
 #   Example of url to Google Trends that works (not link to the downloading file):
 #       'https://trends.google.com/trends/explore?date=2004-01-01%202004-03-31,2004-04-01%202004-06-30,2004-07-01%202004-09-29,2004-09-30%202004-12-29,2004-12-30%202005-03-30&geo=,,,,&q=s%26p%20500,s%26p%20500,s%26p%20500,s%26p%20500,s%26p%20500'
@@ -229,7 +285,8 @@ time.sleep(5)
 
 # Search for the propper quarters
 for i in range(1,6): # Remember that the range() function is exclusive of its upper limit; range(1,6) thus goes from 1 to 5.
-    QuarterSearch(i, (5 + i), (5 + i), ListStartDates[i - 1], ListEndDates[i - 1])
+    QuarterSearch(i, (5 + i), (5 + i),
+                  ListStartDates[i - 1], ListEndDates[i - 1])
     time.sleep(2)
 
 time.sleep(2)
@@ -242,22 +299,23 @@ time.sleep(5)
 
 ## Setup downloads file
 
-d = os.path.dirname(__file__) # directory of script
-p = r'{}/Google_Trends_Downloads'.format(d) # path to be created
+# Create the folder in which we will have our error management log
+create_folder_if_it_does_not_exist(str("Google_Trends_Downloads_for_'" +
+                                   str(SearchTerm) + "'_on_" +
+                                   str(datetime.datetime.now())[0:10]))
 
-# The try loop bellow is inserter in case the script is ran several times. If the 'Google_Trends_Downloads' folder is already created and this try loop wasn't there, it would result in an error.
-try:
-    os.makedirs(p)
-except OSError:
-    pass
+SeleniumDownloadsFolder = str("Google_Trends_Downloads_for_'" +
+                                   str(SearchTerm) + "'_on_" +
+                                   str(datetime.datetime.now())[0:10])
 
 
 # Move downloaded file from the Downloads folder to the aimed folder
 #   Note that the download folder preference on Selenuim's chrome browser doesn't work any more, and that file paths thus have to be entered manually
 os.rename(UserDownloadFolderPath + r'\multiTimeline.csv',
-          str(os.path.dirname(__file__)) + r'\Google_Trends_Downloads' + r'\file can be deleted after script ran 0.csv')
+          SeleniumDownloadsFolder +
+          r'\file_can_be_deleted_after_script_ran_1.csv')
 
-time.sleep(2)
+time.sleep(1.5)
 
 
 
@@ -267,14 +325,15 @@ time.sleep(2)
 
 
 # Read downloaded file into memory
-df = pd.read_csv(str(os.path.dirname(__file__) + r'\Google_Trends_Downloads' + r'\file can be deleted after script ran 0.csv'),
+df = pd.read_csv(str(str(SeleniumDownloadsFolder) +
+                     r'\file_can_be_deleted_after_script_ran_1.csv'),
                  header = 1)
 
 
 ## Find the Quarter with '100'
 
 for i in range(0, 91): # this range() function is exclusinve with respect to its upper limit, i.e.: only reaches 90
-    for j in range(1, 10, 2):
+    for j in range(1, 10, 2): # 'range(1, 10, 2)' goes from 1 to 10 in steps of 2
         if (df.iloc[i, j] == 100): # In the pandas library, the 'iloc' function allows us to get the value in a specified row (a.k.a: index) and culumn (iloc[index,column]).
             NormalisationDateStart = str(df.iloc[0, (j-1)]).replace('-', '/')
             NormalisationDateEnd = str(df.iloc[90, (j-1)]).replace('-', '/')
@@ -290,7 +349,7 @@ for i in list(range(0, int(NTimeWindows))):
 # The bellow 'try' loop will allow us to collect data as far back as possible
 try:
     # The for loop bellow will allow us to find the quarter with the heighest hit. We will then be a ble to normalise all our data according to it.
-    for m in range(5, int(NTimeWindows), 4):
+    for m in range(5, (int(NTimeWindows) - 4), 4):
         
         # Fetch Google Trends Data with that Normilising Quarter and the next set of quarters
         QuarterSearch(1, 10, 10, ListStartDates[NormalisingQuarter], ListEndDates[NormalisingQuarter])
@@ -309,12 +368,12 @@ try:
 
         # Move downloaded file from the Downloads folder to the aimed folder
         os.rename(UserDownloadFolderPath + r'\multiTimeline.csv',
-                  str(os.path.dirname(__file__) + r'\Google_Trends_Downloads' + r'\file can be deleted after script ran ' + str(int((1 + m/4))) + r'.csv'))
+                  str(str(SeleniumDownloadsFolder) + r'\file_can_be_deleted_after_script_ran_' + str(int((1 + m/4))) + r'.csv'))
 
         time.sleep(2)
 
         # Read downloaded file into memory
-        df = pd.read_csv(str(os.path.dirname(__file__) + r'\Google_Trends_Downloads' + r'\file can be deleted after script ran ' + str(int((1 + m/4))) + r'.csv'),
+        df = pd.read_csv(str(str(SeleniumDownloadsFolder) + r'\file_can_be_deleted_after_script_ran_' + str(int((1 + m/4))) + r'.csv'),
                              header = 1)
 
 
@@ -334,6 +393,13 @@ try:
                 pass
 
 except:
+
+    # Append the text file with new log
+    file = open("Error_Checks\\Selenium Google Trends Error Checks.txt",'a')
+    file.write("On the 'Get Normalising Quarter' step, the script encountered an error:\n" +
+               str(Exception) + "\n")
+    file.close()
+    
     datet.strptime(df.iloc[0, 8], '%Y-%m-%d').strftime('%m/%d/%Y')
     
 
@@ -345,9 +411,9 @@ except:
 
 # The bellow 'try' loop will allow us to collect data as far back as possible
 try:
-    for m in range(0, int(NTimeWindows), 4):
+    for m in range(0, int(NTimeWindows) - 4, 4):
         
-        # Fetch Google Trends Data with that Normilising Quarter and the next set of quarters
+        # Fetch Google Trends Data with that Normalising Quarter and the next set of quarters
 
         try:
             
@@ -369,20 +435,24 @@ try:
 
         time.sleep(2)
         
-        # Dowload first CSV
+        # Dowload CSV
         SeleniumClick('/html/body/div[2]/div[2]/div/md-content/div/div/div[1]/trends-widget/ng-include/widget/div/div/div/widget-actions/div/button[1]/i')
 
         time.sleep(5)
 
         # Move downloaded file from the Downloads folder to the aimed folder
-        os.rename(UserDownloadFolderPath + r'\multiTimeline.csv',
-                  str(os.path.dirname(__file__) + r'\Google_Trends_Downloads' + r'\Worldwide Search for ' + SearchTerm + r' ' + str(int((1 + m/4))) + r'.csv'))
+        os.rename(UserDownloadFolderPath + r"\multiTimeline.csv",
+                  str(str(SeleniumDownloadsFolder) + r"\Worldwide_Search_for_'" + SearchTerm + r"'_" + str(int((1 + m/4))) + r".csv"))
 
         time.sleep(2)
         
 except:
-    
-    MaxFileNumber = int(1 + m/4)
+
+    # Append the text file with new log
+    file = open("Error_Checks\\Selenium Google Trends Error Checks.txt",'a')
+    file.write("On the 'Get Normalised Data Files' step, the script encountered an error:\n" +
+               str(Exception) + "\n")
+    file.close()
 
 # Close the browser
 # browser.close()
@@ -395,14 +465,19 @@ except:
 ### Produce Final Data File
 ###--------------------------------------------------------------
 
-df = pd.DataFrame(index=range(91 * 4 * MaxFileNumber), columns=["Date", "Worldwide Google Trends Searches for '" + SearchTerm + "'"])
+MaxFileNumber = int(1 + m/4)
+
+df = pd.DataFrame(index=range(91 * 4 * MaxFileNumber), columns=["Date", "Worldwide_Google_Trends_Searches_for_'" + SearchTerm + "'"])
 
 for i in range(1, MaxFileNumber):
-    TempDF = pd.read_csv(str(os.path.dirname(__file__) + r'\Google_Trends_Downloads' + r'\Worldwide Search for ' + SearchTerm + r' ' + str(i) + r'.csv'),
+    TempDF = pd.read_csv(str(str(SeleniumDownloadsFolder) +
+                             r"\Worldwide_Search_for_'" +
+                             SearchTerm + r"'_" +
+                             str(i) + r'.csv'),
                      header = 1)
 
     ## Populate df
-    for n in range(1, 5): # Remember that 'range()' is upper limit exclusive such that range(1, 5) goes from 1 to 5.
+    for n in range(1, 5): # Remember that 'range()' is upper limit exclusive such that range(1, 5) goes from 1 to 4.
         for j in range(0, 91):
             df.iloc[ ((i-1) * (91*4)) + ((91 * (n-1)) + j) , 0 ] = TempDF.iloc[ (90 - j), 2*n ]
             df.iloc[ ((i-1) * (91*4)) + ((91 * (n-1)) + j) , 1 ] = TempDF.iloc[ (90 - j), (1 + n*2) ]
@@ -411,9 +486,7 @@ for i in range(1, MaxFileNumber):
 df = df.dropna()
 
 # Produce a CSV with the data
-df.to_csv(str("Google Trends Worldwide Search for '" + SearchTerm + "'" + r'.csv'))
-
-
+df.to_csv(str("Google_Trends_Worldwide_Search_for_'" + SearchTerm + "'" + r'.csv'))
 
 
 
